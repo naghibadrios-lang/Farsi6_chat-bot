@@ -1,167 +1,2908 @@
-
-<script>
-(() => {
-const D = JSON.parse(document.querySelector('#source').textContent);
-const A = [...D.lessons, ...D.extras].sort((a,b) => a.page-b.page);
-let selected = A[0], correct = 0, total = 0;
-
-const css = `
-body{margin:0!important;background:#f4f6ff;color:#2d3552;font-family:Tahoma,Arial}
-#newchat{height:100dvh;display:flex;flex-direction:column}
-#nc-head{background:#fff;padding:14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e5e4f2}
-#nc-head b{color:#5638ad}
-#nc-head button,.nc-opts button{border:1px solid #d8d2f4;background:#eee9ff;color:#5843aa;border-radius:12px;padding:10px}
-#nc-top{padding:10px;background:#fff;border-bottom:1px solid #e5e4f2}
-#nc-top select{width:100%;border:1px solid #ddd7ed;padding:10px;background:white;border-radius:10px}
-#nc-log{flex:1;overflow:auto;padding:15px}
-#nc-log article{width:max-content;max-width:92%;white-space:pre-wrap;line-height:2;background:#fff;border:1px solid #e6e8f2;padding:12px 14px;border-radius:16px 16px 5px 16px;font-size:13px;margin:8px 0;overflow-wrap:anywhere}
-#nc-log article.me{margin-right:auto;background:#684bc7;color:white;border:0;border-radius:16px 16px 16px 5px}
-.nc-opts{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}
-#nc-foot{padding:11px;background:white;border-top:1px solid #e5e4f2}
-#nc-form{display:flex;gap:8px}
-#nc-form input{min-width:0;flex:1;padding:12px;border:1px solid #ddd7ed;border-radius:12px}
-#nc-form button{border:0;background:#684bc7;color:white;border-radius:12px;padding:10px 14px}
-#nc-foot small{color:#8d92a4;font-size:10px}`;
-
-const style = document.createElement('style');
-style.textContent = css;
-document.head.appendChild(style);
-
-document.body.innerHTML = `
-<main id="newchat">
-  <div id="nc-head">
-    <b>🤖 همیار فارسی ششم</b>
-    <div>
-      <button id="nc-report">📈 کارنامه</button>
-      <button id="nc-teacher">👩‍🏫 معلم</button>
-    </div>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#6850c9"><title>همیار هوشمند فارسی ششم | چت آموزشی</title>
+<style>:root{font-family:Tahoma,Arial,sans-serif;color:#23304b;background:#f5f7ff;font-size:15px;--ink:#25314f;--muted:#6f7c96;--primary:#6446bc;--primary2:#8259d5;--line:#e5e7f3;--bg:#f6f7ff;--card:#fff;--mint:#eafbf4;--rose:#fff0f5}*{box-sizing:border-box}html{height:100%}body{margin:0;min-height:100%;direction:rtl}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.55;cursor:default}a{color:var(--primary)}.shell{height:100dvh;min-height:550px;display:flex;flex-direction:column;overflow:hidden}header{height:71px;display:flex;gap:14px;align-items:center;justify-content:space-between;padding:9px 25px;border-bottom:1px solid var(--line);background:#fff;flex:none}.logo{height:44px;width:44px;border-radius:15px;background:linear-gradient(145deg,#8257d8,#4b9dcb);color:#fff;display:grid;place-items:center;font-weight:900;font-size:25px;box-shadow:0 7px 17px #725ab63f}.brand{display:flex;gap:12px;align-items:center}.brand strong{display:block;font-size:16px}.brand small{color:var(--muted);display:block;font-size:11px;margin-top:5px}.topactions{display:flex;gap:8px;align-items:center}.btn{border:1px solid #dfddf0;background:#fff;color:#554d83;border-radius:12px;padding:10px 13px;transition:.2s}.btn:hover,.chip:hover{border-color:#9678db;background:#f7f3ff}.btn.primary{background:var(--primary);color:white;border-color:var(--primary)}.btn.primary:hover{background:#5234a9}.btn.ghost{border:0;background:transparent}.tag{padding:6px 11px;border-radius:30px;background:#f1ecff;color:#654ba8;font-weight:600;font-size:11px;white-space:nowrap}.tag.good{background:#e1f7ee;color:#267b63}.workspace{display:grid;grid-template-columns:277px minmax(0,1fr);flex:1;min-height:0;max-width:1600px;width:100%;margin:auto}.sidebar{background:#fff;border-left:1px solid var(--line);overflow:auto;padding:20px 16px}.sidebar h2{font-size:16px;margin:0 0 14px}.search,.field{padding:11px 12px;border:1px solid var(--line);border-radius:13px;background:#fff;color:var(--ink);width:100%;outline:none}.search:focus,.field:focus,.composer textarea:focus{border-color:#8d76da;box-shadow:0 0 0 3px #efe9ff}.sidegroup{margin:20px 0 10px}.sidegroup h3{font-size:13px;color:#6059a4;margin:8px 0;display:flex;justify-content:space-between}.section-item{display:flex;align-items:flex-start;justify-content:space-between;border:1px solid transparent;border-radius:12px;padding:10px 10px;width:100%;text-align:right;color:#3a4664;background:transparent;gap:5px;margin:3px 0;font-size:12px}.section-item:hover{background:#f7f4ff}.section-item.active{border-color:#d7caff;background:#f3efff;color:#5c41ae;font-weight:bold}.section-item small{white-space:nowrap;color:#8b95ad}.notice{font-size:11px;line-height:1.9;background:#f7f6fd;border:1px solid var(--line);padding:12px;border-radius:12px;margin-top:12px;color:#69768f}.main{display:flex;flex-direction:column;min-width:0;min-height:0;background:radial-gradient(ellipse at top right,#efefff 0%,#f7f9ff 56%,#f8fbfe 100%)}.headband{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:15px 23px;background:#ffffffd4;border-bottom:1px solid var(--line);min-height:67px}.headband h1{font-size:16px;margin:0 0 5px}.headband .subtitle{font-size:11px;color:var(--muted)}.message-list{flex:1;overflow:auto;padding:26px max(15px,calc((100% - 850px)/2)) 20px;scroll-behavior:smooth}.message{display:flex;gap:10px;align-items:flex-start;margin:12px 0;max-width:94%}.message.user{margin-right:auto;flex-direction:row-reverse}.avatar{width:34px;height:34px;display:grid;place-items:center;border-radius:13px;background:#e9e1ff;flex:none;font-size:18px}.user .avatar{background:#dff2fc}.bubble{border-radius:19px 19px 6px 19px;background:white;box-shadow:0 4px 17px #313a6610;border:1px solid #edf0f6;padding:13px 16px;line-height:2;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.user .bubble{border-radius:19px 19px 19px 6px;background:#6950c7;color:white;border-color:#6950c7}.message.bot .bubble{max-width:710px}.speaker{font-size:10px;color:#8690ac;display:block;margin-top:6px}.message.user .speaker{display:none}.action-bar{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px 44px}.chip{background:white;border:1px solid #dcdcee;border-radius:40px;color:#5e4fa2;padding:9px 12px;font-size:12px}.chip.active{color:#fff;background:#7352c6}.chip.correct{border-color:#46bc90;background:#eafaf2;color:#177954}.chip.wrong{border-color:#de8698;background:#ffedf2;color:#9d3e54}.assistant-note{margin:10px 44px;color:#8091a6;font-size:11px}.composer-panel{flex:none;border-top:1px solid var(--line);background:#fff;padding:14px max(16px,calc((100% - 830px)/2)) 12px}.prompts{display:flex;gap:7px;overflow:auto;padding-bottom:10px;scrollbar-width:thin}.prompts .chip{white-space:nowrap;flex:none;padding:7px 11px}.composer{display:flex;align-items:flex-end;gap:9px;padding:6px;border:1px solid #dfdfef;border-radius:19px;background:#fff;box-shadow:0 2px 12px #3646780a}.composer textarea{width:100%;resize:none;min-height:39px;max-height:105px;border:0;outline:0;background:transparent;padding:7px 10px;font-size:13px;line-height:1.8}.composer button{border:0;background:var(--primary);color:white;width:46px;height:43px;border-radius:13px;flex:none;font-size:21px}.disclaimer{text-align:center;color:#8d98ac;font-size:10px;margin-top:8px}.drawer{position:fixed;z-index:70;inset:0;background:#14244371;display:flex;justify-content:center;align-items:center;padding:14px}.drawer.hidden,.hidden{display:none!important}.dialog{width:min(650px,100%);max-height:92dvh;overflow:auto;background:white;border-radius:22px;padding:24px;box-shadow:0 22px 70px #151b4355}.dialog-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eef0f5;padding-bottom:12px;margin-bottom:16px}.dialog h2{font-size:19px;margin:0}.dialog h3{font-size:15px}.dialog p{font-size:13px;line-height:2;color:#66718b}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field-row{display:flex;flex-direction:column;gap:6px;margin:9px 0}.field-row label{font-size:12px;color:#6c7690}.dialog .btn{margin-top:8px}.card{border:1px solid var(--line);border-radius:15px;padding:14px;margin:12px 0;background:#fbfcff}.card h3{margin:0 0 8px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.metric{background:#f3f0ff;border:1px solid #e6deff;padding:12px;border-radius:14px;text-align:center}.metric b{display:block;font-size:23px;color:#5843a8}.metric small{font-size:11px;color:#77708e}.result-row{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin:8px 0}.bar{height:8px;background:#eaeaf3;border-radius:15px;overflow:hidden;margin:6px 0}.bar i{height:100%;background:linear-gradient(90deg,#7d5ada,#45c6ab);display:block}.table-wrap{overflow:auto}.tbl{border-collapse:collapse;width:100%;font-size:12px}.tbl td,.tbl th{padding:11px;border-bottom:1px solid #eaeaf4;text-align:right;white-space:nowrap}.tbl th{color:#6f66a9}.error{color:#b94855;font-size:12px;margin:8px 0}.success{color:#25876b;font-size:12px}.mobile-only{display:none}.overlay{display:none}@media(max-width:820px){.workspace{grid-template-columns:minmax(0,1fr)}.sidebar{position:fixed;top:0;bottom:0;right:0;width:min(320px,86vw);z-index:60;box-shadow:-12px 0 35px #1922452e;transform:translateX(110%);transition:transform .2s}.sidebar.open{transform:translateX(0)}.overlay.open{display:block;position:fixed;inset:0;background:#16204176;z-index:50}.mobile-only{display:inline-flex}.headband{padding:10px 14px}.headband h1{font-size:14px}.topactions .tag{display:none}header{padding:9px 12px;height:65px}.brand strong{font-size:13px}.brand small{font-size:10px}.brand .logo{height:40px;width:40px}.topactions .btn{padding:8px;font-size:11px}.message-list{padding:16px 11px}.message{max-width:100%}.bubble{padding:11px 12px}.action-bar{margin-right:42px;margin-left:0}.composer-panel{padding:10px 9px}.formgrid{grid-template-columns:1fr}.dialog{padding:17px}.metrics{gap:5px}.metric{padding:9px}}
+</style>
+</head><body>
+<div class="shell">
+  <header>
+    <div class="brand"><div class="logo">ف</div><div><strong>همیار هوشمند فارسی ششم</strong><small>یادگیری شخصی با گفت‌وگو، داستان و بازی</small></div></div>
+    <div class="topactions"><span class="tag" id="mode-label">راهنمای آفلاین</span><button class="btn" id="progress-btn">📈 کارنامه</button><button class="btn primary" id="account-btn">👤 معلم / ورود</button></div>
+  </header>
+  <div class="workspace">
+    <aside id="sidebar" class="sidebar">
+      <h2>📚 فصل‌ها و درس‌های کتاب</h2>
+      <input id="search" class="search" placeholder="جست‌وجو در عنوان درس‌ها..." aria-label="جست‌وجوی درس">
+      <div id="item-list"></div>
+      <div class="notice">این سامانه بر پایهٔ خلاصه‌ها و تمرین‌های تألیفی برای ۶ فصل، ۱۷ درس اصلی و ۲۱ بخش مکمل طراحی شده است. برای اصل متن کتاب، شمارهٔ صفحهٔ هر بخش درج شده است.</div>
+    </aside>
+    <div class="overlay" id="overlay"></div>
+    <main class="main">
+      <section class="headband"><div><h1 id="current-title">فارسی ششم</h1><div id="current-subtitle" class="subtitle">۶ فصل • ۳۸ بخش آموزشی</div></div><button class="btn mobile-only" id="menu-btn">☰ درس‌ها</button></section>
+      <div class="message-list" id="messages" role="log" aria-label="گفت‌وگوی آموزشی" aria-live="polite"></div>
+      <section class="composer-panel">
+        <div class="prompts"><button class="chip" data-prompt="خلاصه این درس">📖 خلاصه درس</button><button class="chip" data-prompt="پیام این درس">💡 پیام درس</button><button class="chip" data-prompt="معنی واژه ها">🔤 واژه‌آموزی</button><button class="chip" data-prompt="بازی">🎮 بازی</button><button class="chip" data-prompt="آزمون">📝 آزمون</button><button class="chip" data-prompt="نکته زبانی">✍️ نکته زبانی</button><button class="chip" data-prompt="بخوان و بیندیش">📚 بخوان و بیندیش</button></div>
+        <form id="composer" class="composer"><textarea id="input" rows="1" maxlength="1100" placeholder="دربارهٔ درس سؤال بپرس؛ مثلاً: پیام هفت‌خان رستم چیست؟" aria-label="پیام دانش‌آموز"></textarea><button type="submit" id="send-btn" aria-label="ارسال پیام">➤</button></form>
+        <div class="disclaimer">راهنمای آفلاین پاسخ‌های محدود دارد؛ AI مولد فقط با سرور و کلید امن فعال می‌شود. اطلاعات خصوصی وارد نکنید.</div>
+      </section>
+    </main>
   </div>
-  <div id="nc-top">
-    <select id="nc-select"></select>
-  </div>
-  <section id="nc-log"></section>
-  <div id="nc-foot">
-    <div class="nc-opts" id="nc-short"></div>
-    <form id="nc-form">
-      <input id="nc-input" placeholder="درباره درس سؤال بپرس...">
-      <button>ارسال ➤</button>
-    </form>
-    <small>نسخه راهنمای آفلاین؛ پاسخ AI واقعی نیازمند سرور امن است.</small>
-  </div>
-</main>`;
-
-const $ = s => document.querySelector(s);
-const log = $('#nc-log');
-
-function say(t, me=false) {
-  const a = document.createElement('article');
-  a.className = me ? 'me' : '';
-  a.textContent = t;
-  log.appendChild(a);
-  log.scrollTop = log.scrollHeight;
-}
-
-function opts(a, at=$('#nc-short')) {
-  at.innerHTML = '';
-  a.forEach(([t,fn]) => {
-    const b = document.createElement('button');
-    b.textContent = t;
-    b.onclick = fn;
-    at.appendChild(b);
-  });
-}
-
-$('#nc-select').innerHTML = A.map(x =>
-  `<option value="${x.key}">${x.title} (ص ${x.page})</option>`
-).join('');
-
-function choose() {
-  selected = A.find(x => x.key === $('#nc-select').value);
-  log.innerHTML = '';
-  say(`سلام! 🌷 بخش «${selected.title}» را انتخاب کردی.
-می‌توانی سؤال بپرسی یا از دکمه‌های زیر استفاده کنی.`);
-}
-
-$('#nc-select').onchange = choose;
-
-function send(q) {
-  q = String(q || '').trim();
-  if (!q) return;
-  $('#nc-input').value = '';
-  say(q, true);
-  const x = selected;
-
-  if (/بازی|آزمون/.test(q)) {
-    startGame();
-    return;
+</div>
+<div class="drawer hidden" id="dialog-wrap" role="presentation"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><div class="dialog-top"><h2 id="dialog-title"></h2><button class="btn ghost" id="close-dialog" aria-label="بستن">✕</button></div><div id="dialog-body"></div></div></div>
+<script id="book-data" type="application/json">{
+  "chapters": [
+    {
+      "id": 1,
+      "name": "آفرینش",
+      "page": 9,
+      "theme": "طبیعت، شناخت و اندیشیدن"
+    },
+    {
+      "id": 2,
+      "name": "دانایی و هوشیاری",
+      "page": 25,
+      "theme": "خردورزی، زبان و حماسه"
+    },
+    {
+      "id": 3,
+      "name": "ایران من",
+      "page": 49,
+      "theme": "میهن‌دوستی و هویت فرهنگی"
+    },
+    {
+      "id": 4,
+      "name": "نام‌آوران",
+      "page": 65,
+      "theme": "زندگی بزرگان و فداکاری"
+    },
+    {
+      "id": 5,
+      "name": "راه زندگی",
+      "page": 83,
+      "theme": "دوستی، مشورت و زندگی"
+    },
+    {
+      "id": 6,
+      "name": "علم و عمل",
+      "page": 97,
+      "theme": "دانش، کردار و اخلاق"
+    }
+  ],
+  "lessons": [
+    {
+      "id": 1,
+      "ch": 1,
+      "title": "معرفت آفریدگار",
+      "page": 10,
+      "focus": "دقت در آفرینش و انواع جمله",
+      "summary": "در این درس، نگاه دقیق به طبیعت و اندیشیدن درباره آفریدگار پرورش می‌یابد. بخش دانش زبانی، جمله‌های خبری، پرسشی، امری و عاطفی را معرفی می‌کند.",
+      "words": [
+        [
+          "معرفت",
+          "شناخت و آگاهی"
+        ],
+        [
+          "آفریدگار",
+          "آفریننده"
+        ],
+        [
+          "سپاس",
+          "قدردانی"
+        ],
+        [
+          "غفلت",
+          "بی‌توجهی"
+        ]
+      ],
+      "language": "جمله خبری خبر می‌دهد؛ پرسشی سؤال می‌پرسد؛ امری درخواست یا فرمان می‌دهد؛ عاطفی احساس را نشان می‌دهد.",
+      "writing": "سه جمله با موضوع یک درخت بنویس: خبری، پرسشی و عاطفی.",
+      "oral": "با نگاه به یک برگ یا گل، دو نکته توصیفی با صدای رسا بگو.",
+      "questions": [
+        {
+          "q": "کدام جمله پرسشی است؟",
+          "choices": [
+            "پرنده پرواز کرد.",
+            "آیا باران می‌بارد؟",
+            "چه گل زیبایی!",
+            "پنجره را ببند."
+          ],
+          "answer": 1,
+          "explanation": "وجود پرسش و نشانهٔ سؤال، جمله را پرسشی می‌کند.",
+          "skill": "دستور زبان",
+          "level": 1
+        },
+        {
+          "q": "واژهٔ «معرفت» نزدیک به کدام معناست؟",
+          "choices": [
+            "شتاب",
+            "شناخت",
+            "فراموشی",
+            "نبرد"
+          ],
+          "answer": 1,
+          "explanation": "معرفت یعنی شناخت و آگاهی.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "در عبارت «چه آسمان زیبایی!» نوع جمله چیست؟",
+          "choices": [
+            "امری",
+            "پرسشی",
+            "عاطفی",
+            "خبری"
+          ],
+          "answer": 2,
+          "explanation": "گوینده احساس شگفتی خود را بیان می‌کند.",
+          "skill": "دستور زبان",
+          "level": 3
+        }
+      ],
+      "open": "چرا توجه به زیبایی‌های طبیعت می‌تواند ما را به فکر کردن وادارد؟",
+      "kind": "درس",
+      "key": "l1",
+      "message": "اندیشیدن در نشانه‌های طبیعت، شناخت و سپاسگزاری را بیشتر می‌کند.",
+      "literacy_topic": "جمله‌های خبری، پرسشی، امری و عاطفی",
+      "literacy_exercise": "از یک منظره طبیعی یک جمله خبری و یک جمله عاطفی بساز.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 2,
+      "ch": 1,
+      "title": "پنجره‌های شناخت",
+      "page": 14,
+      "focus": "دیدگاه‌های گوناگون و هم‌خانواده",
+      "summary": "دانش‌آموزان در قالب گروه‌های تفکر، ایمان، اخلاق، علم و عمل درباره شناخت گفت‌وگو می‌کنند و نقش دیدگاه‌های متفاوت را می‌سنجند.",
+      "words": [
+        [
+          "تفکر",
+          "اندیشیدن"
+        ],
+        [
+          "اخلاق",
+          "خوی و رفتار"
+        ],
+        [
+          "خلقت",
+          "آفرینش"
+        ],
+        [
+          "تعلیم",
+          "آموزش"
+        ]
+      ],
+      "language": "واژه‌های هم‌خانواده ریشهٔ مشترک دارند؛ مانند «علم، عالم، معلّم، تعلیم».",
+      "writing": "توضیح بده گروه تو برای شناخت بهتر جهان چه پرسش‌هایی مطرح می‌کند.",
+      "oral": "یکی از دیدگاه‌ها را انتخاب کن و در دو جمله از آن دفاع کن.",
+      "questions": [
+        {
+          "q": "کدام واژه با «علم» هم‌خانواده است؟",
+          "choices": [
+            "عالم",
+            "دلالت",
+            "علامت",
+            "آرام"
+          ],
+          "answer": 0,
+          "explanation": "علم و عالم ریشهٔ مشترک دارند.",
+          "skill": "واژگان",
+          "level": 1
+        },
+        {
+          "q": "هدف کار گروهی در درس چیست؟",
+          "choices": [
+            "حفظ‌کردن بی‌فکر",
+            "شنیدن دیدگاه‌های گوناگون",
+            "کنار گذاشتن پرسش",
+            "تنها ماندن"
+          ],
+          "answer": 1,
+          "explanation": "گفت‌وگو به گسترش شناخت کمک می‌کند.",
+          "skill": "درک مطلب",
+          "level": 2
+        },
+        {
+          "q": "کدام کار نمونهٔ پیوند علم و عمل است؟",
+          "choices": [
+            "دانستن ارزش نظم بدون عمل",
+            "عمل به دانسته‌های مفید",
+            "نادیده گرفتن نظر دیگران",
+            "پرهیز از مطالعه"
+          ],
+          "answer": 1,
+          "explanation": "دانش با عمل مسئولانه ارزش بیشتری پیدا می‌کند.",
+          "skill": "تفکر انتقادی",
+          "level": 3
+        }
+      ],
+      "open": "از نظر تو آیا دیدگاه دو گروه متفاوت می‌تواند هم‌زمان نکتهٔ درستی داشته باشد؟ چرا؟",
+      "kind": "درس",
+      "key": "l2",
+      "message": "برای شناخت بهتر، باید دیدگاه‌های گوناگون را شنید و اندیشه، علم و اخلاق را با عمل همراه کرد.",
+      "literacy_topic": "خانوادهٔ واژه و ریشهٔ مشترک",
+      "literacy_exercise": "از واژهٔ علم دو هم‌خانواده بنویس.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 3,
+      "ch": 2,
+      "title": "هوشیاری",
+      "page": 26,
+      "focus": "پیش‌بینی پیامدها و تصمیم عاقلانه",
+      "summary": "این داستان بر دقت در موقعیت، عجله نکردن و توجه به نتیجهٔ رفتار تأکید دارد. برای پاسخ‌دادن باید رابطهٔ علت و نتیجه را در رویدادهای داستان پیدا کنیم.",
+      "words": [
+        [
+          "هوشیاری",
+          "آگاهی و دقت"
+        ],
+        [
+          "تدبیر",
+          "چاره‌اندیشی"
+        ],
+        [
+          "شتاب‌زدگی",
+          "عجله کردن"
+        ],
+        [
+          "پشیمانی",
+          "افسوس از کار انجام‌شده"
+        ]
+      ],
+      "language": "در روایت داستانی، علت یک رویداد را از پیامد آن جدا می‌کنیم.",
+      "writing": "یک موقعیت بنویس که صبر کردن در آن جلوی یک اشتباه را بگیرد.",
+      "oral": "داستان را در سه بخش آغاز، مسئله و پایان به زبان خود تعریف کن.",
+      "questions": [
+        {
+          "q": "کدام رفتار نشانهٔ هوشیاری است؟",
+          "choices": [
+            "قضاوت فوری",
+            "بررسی نتیجه پیش از عمل",
+            "بی‌توجهی به هشدار",
+            "تقلید بی‌فکر"
+          ],
+          "answer": 1,
+          "explanation": "فکر کردن به پیامدهای کار از تصمیم نادرست جلوگیری می‌کند.",
+          "skill": "درک مطلب",
+          "level": 1
+        },
+        {
+          "q": "معنای نزدیک «تدبیر» چیست؟",
+          "choices": [
+            "چاره‌اندیشی",
+            "فریاد",
+            "خواب",
+            "سرگرمی"
+          ],
+          "answer": 0,
+          "explanation": "تدبیر یعنی سنجیدن و چاره‌اندیشی.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "برای تحلیل داستان کدام پرسش مناسب‌تر است؟",
+          "choices": [
+            "متن چند حرف دارد؟",
+            "چرا این تصمیم به آن نتیجه رسید؟",
+            "صفحه چه رنگی است؟",
+            "اندازهٔ فونت چقدر است؟"
+          ],
+          "answer": 1,
+          "explanation": "پرسش «چرا» علت و نتیجه را روشن می‌کند.",
+          "skill": "تفکر انتقادی",
+          "level": 3
+        }
+      ],
+      "open": "اگر جای شخصیت اصلی بودی، پیش از تصمیم‌گرفتن چه چیزی را بررسی می‌کردی؟",
+      "kind": "درس",
+      "key": "l3",
+      "message": "هوشیاری یعنی پیش از تصمیم گرفتن پیامد کارها را بسنجیم و شتاب‌زده عمل نکنیم.",
+      "literacy_topic": "هجا و بخش کردن واژه",
+      "literacy_exercise": "واژهٔ «هوشیاری» را بخش‌بخش بخوان.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 4,
+      "ch": 2,
+      "title": "داستان من و شما",
+      "page": 32,
+      "focus": "زبان فارسی، هویت و پیوند اجتماعی",
+      "summary": "زبان فارسی در این درس مانند راویِ داستان خود سخن می‌گوید و از نقش زبان مشترک در ارتباط و همبستگی یاد می‌کند.",
+      "words": [
+        [
+          "همبستگی",
+          "همدلی و پیوند"
+        ],
+        [
+          "هویت",
+          "ویژگی‌های شناساننده"
+        ],
+        [
+          "پاسداری",
+          "نگهبانی"
+        ],
+        [
+          "گستره",
+          "دامنه و پهنه"
+        ]
+      ],
+      "language": "وقتی به چیزی غیرانسانی ویژگی انسانی می‌دهیم، «جان‌بخشی» یا شخصیت‌بخشی به کار رفته است.",
+      "writing": "یک نامهٔ کوتاه از زبان «کتاب» به دانش‌آموز بنویس.",
+      "oral": "در یک دقیقه بگو چگونه می‌توان از زبان فارسی پاسداری کرد.",
+      "questions": [
+        {
+          "q": "راوی درس «داستان من و شما» چیست؟",
+          "choices": [
+            "زبان فارسی",
+            "یک رودخانه",
+            "خورشید",
+            "یک پرنده"
+          ],
+          "answer": 0,
+          "explanation": "در این درس، زبان فارسی خود را معرفی می‌کند.",
+          "skill": "درک مطلب",
+          "level": 1
+        },
+        {
+          "q": "معنای «پاسداری» چیست؟",
+          "choices": [
+            "نگهبانی",
+            "فراموشی",
+            "گسترش دشمنی",
+            "خاموشی"
+          ],
+          "answer": 0,
+          "explanation": "پاسداری یعنی مراقبت و نگهبانی.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "«کتاب از تنهایی شکایت کرد» نمونهٔ چیست؟",
+          "choices": [
+            "جان‌بخشی",
+            "شمردن",
+            "تعریف علمی",
+            "دستور"
+          ],
+          "answer": 0,
+          "explanation": "به کتاب ویژگی سخن‌گفتن انسان داده شده است.",
+          "skill": "دانش ادبی",
+          "level": 3
+        }
+      ],
+      "open": "برای زنده و پویا ماندن زبان فارسی چه کاری از دست دانش‌آموزان برمی‌آید؟",
+      "kind": "درس",
+      "key": "l4",
+      "message": "زبان فارسی یکی از پیوندهای فرهنگی ماست و گفت‌وگو و همدلی را امکان‌پذیر می‌کند.",
+      "literacy_topic": "ساخت جمع با «ان» و تغییر در بعضی جمع‌ها",
+      "literacy_exercise": "دو اسم را با «ان» جمع ببند.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 5,
+      "ch": 2,
+      "title": "هفت‌خان رستم",
+      "page": 37,
+      "focus": "حماسه، ترتیب رویداد و شخصیت‌پردازی",
+      "summary": "داستان هفت‌خان دربارهٔ گذشتن رستم از هفت مرحلهٔ دشوار است. مهارت کلیدی، پیگیری ترتیب حوادث، شناخت شخصیت‌ها و دریافت پیام پایداری است.",
+      "words": [
+        [
+          "خان",
+          "مرحله یا منزل دشوار"
+        ],
+        [
+          "حماسه",
+          "روایت دلاوری‌های بزرگ"
+        ],
+        [
+          "رخش",
+          "نام اسب رستم"
+        ],
+        [
+          "دیو",
+          "موجود افسانه‌ای در داستان"
+        ]
+      ],
+      "language": "حماسه روایتی از دلاوری‌ها و نبردهای قهرمانانه است؛ رویدادهای آن را می‌توان روی خط زمان قرار داد.",
+      "writing": "سه خان را به انتخاب خودت به ترتیب و در سه جمله خلاصه کن.",
+      "oral": "یکی از خان‌ها را با لحن راوی حماسی، بدون خواندن متن کتاب، تعریف کن.",
+      "questions": [
+        {
+          "q": "نام اسب رستم چیست؟",
+          "choices": [
+            "رخش",
+            "شبدیز",
+            "بادپا",
+            "سمند"
+          ],
+          "answer": 0,
+          "explanation": "در شاهنامه اسب رستم «رخش» است.",
+          "skill": "درک مطلب",
+          "level": 1
+        },
+        {
+          "q": "«خان» در عنوان درس چه معنایی دارد؟",
+          "choices": [
+            "مسیر یا مرحلهٔ دشوار",
+            "آواز",
+            "دفتر",
+            "بهار"
+          ],
+          "answer": 0,
+          "explanation": "هر خان یک مرحله از سفر دشوار رستم است.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "برای بازگویی داستان هفت‌خان کدام روش بهتر است؟",
+          "choices": [
+            "جابه‌جاگفتن رویدادها",
+            "مرتب کردن خان‌ها بر خط زمان",
+            "حذف همهٔ شخصیت‌ها",
+            "بی‌توجهی به علت رخدادها"
+          ],
+          "answer": 1,
+          "explanation": "خط زمان به فهم توالی رویدادهای حماسه کمک می‌کند.",
+          "skill": "درک مطلب",
+          "level": 3
+        }
+      ],
+      "open": "به نظر تو چه ویژگی‌هایی باعث می‌شود یک شخصیت به قهرمان داستان تبدیل شود؟",
+      "kind": "درس",
+      "key": "l5",
+      "message": "در برابر دشواری‌ها با دلیری، خرد و پایداری می‌توان پیش رفت.",
+      "literacy_topic": "کنایه و روایت رویدادها به ترتیب",
+      "literacy_exercise": "یک کنایهٔ روزمره بگو و معنای غیرمستقیمش را شرح بده.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 6,
+      "ch": 3,
+      "title": "ای وطن",
+      "page": 50,
+      "focus": "علاقه به میهن و نشانهٔ ندا",
+      "summary": "در شعر «ای وطن» ارزش میهن و احساس مسئولیت در برابر آن مطرح می‌شود. در دانش زبانی با نشانه‌های ندا و واژهٔ منادا آشنا می‌شویم.",
+      "words": [
+        [
+          "وطن",
+          "میهن"
+        ],
+        [
+          "سرافراز",
+          "سربلند"
+        ],
+        [
+          "ندا",
+          "صدا زدن و خطاب کردن"
+        ],
+        [
+          "منادا",
+          "مخاطب در جملهٔ ندایی"
+        ]
+      ],
+      "language": "در «ای وطن!» واژهٔ «ای» نشانهٔ ندا و «وطن» منادا است.",
+      "writing": "چهار خط دربارهٔ یکی از زیبایی‌های شهر یا روستایت بنویس.",
+      "oral": "با لحن درست، یک جملهٔ ندایی و یک جملهٔ خبری بساز.",
+      "questions": [
+        {
+          "q": "در عبارت «ای ایران!» نشانهٔ ندا کدام است؟",
+          "choices": [
+            "ای",
+            "ایران",
+            "!",
+            "هیچ‌کدام"
+          ],
+          "answer": 0,
+          "explanation": "«ای» برای خطاب کردن آمده است.",
+          "skill": "دستور زبان",
+          "level": 1
+        },
+        {
+          "q": "واژهٔ «سرافراز» چه معنایی دارد؟",
+          "choices": [
+            "سربلند",
+            "خسته",
+            "بی‌قرار",
+            "پنهان"
+          ],
+          "answer": 0,
+          "explanation": "سرافراز یعنی سربلند و پرافتخار.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "در «خدایا، یاریم کن!» واژهٔ منادا کدام است؟",
+          "choices": [
+            "خدایا",
+            "یاریم",
+            "کن",
+            "هیچ‌کدام"
+          ],
+          "answer": 0,
+          "explanation": "«خدایا» واژهٔ مخاطب در جمله است.",
+          "skill": "دستور زبان",
+          "level": 3
+        }
+      ],
+      "open": "دو روش عملی برای خدمت به میهن در سن دانش‌آموزی پیشنهاد بده.",
+      "kind": "درس",
+      "key": "l6",
+      "message": "دوست داشتن میهن با شناخت آن و کوشش برای آبادانی‌اش همراه است.",
+      "literacy_topic": "ندا و منادا در جمله و شعر",
+      "literacy_exercise": "یک جمله با ندای «ای» دربارهٔ شهر خود بنویس.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 7,
+      "ch": 3,
+      "title": "درس آزاد ۱: فرهنگ بومی",
+      "page": 54,
+      "focus": "شناخت فرهنگ محل زندگی",
+      "summary": "این بخش در کتاب به‌صورت درس آزاد است و متن ثابت سراسری ندارد. محتوای آن با همکاری معلم و دانش‌آموز درباره فرهنگ محلی نوشته می‌شود.",
+      "words": [
+        [
+          "بومی",
+          "وابسته به یک منطقه"
+        ],
+        [
+          "آیین",
+          "رسم و شیوهٔ معمول"
+        ],
+        [
+          "میراث",
+          "آنچه از پیشینیان به جا مانده"
+        ],
+        [
+          "گویش",
+          "گونهٔ محلی زبان"
+        ]
+      ],
+      "language": "برای نوشتن متن پژوهشی، از عنوان، مقدمه، مثال و نتیجه‌گیری استفاده کن.",
+      "writing": "درباره یک خوراک، جشن، قصه یا هنر بومی محل خود، ۵ جمله بنویس.",
+      "oral": "از یک بزرگ‌تر درباره یک واژه یا رسم محلی پرس‌وجو کن و نتیجه را شرح بده.",
+      "questions": [
+        {
+          "q": "درس آزاد در کتاب بر چه چیزی تکیه دارد؟",
+          "choices": [
+            "فرهنگ بومی دانش‌آموزان",
+            "یک داستان ثابت برای همه",
+            "جدول ضرب",
+            "روخوانی انگلیسی"
+          ],
+          "answer": 0,
+          "explanation": "درس آزاد برای فعالیت بومی و مشارکتی طراحی شده است.",
+          "skill": "درک مطلب",
+          "level": 1
+        },
+        {
+          "q": "«میراث» در موضوع فرهنگ چه معنایی دارد؟",
+          "choices": [
+            "یادگار گذشتگان",
+            "خبر فردا",
+            "تصادف",
+            "اجبار"
+          ],
+          "answer": 0,
+          "explanation": "میراث چیزی است که از نسل‌های پیش به جا مانده است.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "در گزارش یک رسم محلی کدام کار درست‌تر است؟",
+          "choices": [
+            "نوشتن بدون منبع",
+            "پرس‌وجو و آوردن مثال واقعی",
+            "حدس زدن همهٔ جزئیات",
+            "کپیِ بی‌نام"
+          ],
+          "answer": 1,
+          "explanation": "پژوهش درست بر پرس‌وجو و مثال قابل‌بررسی تکیه دارد.",
+          "skill": "تفکر انتقادی",
+          "level": 3
+        }
+      ],
+      "open": "کدام سنت محلی را دوست داری به دیگران معرفی کنی و چرا؟",
+      "kind": "درس",
+      "key": "l7",
+      "message": "شناخت آیین‌ها و زبان و هنر بومی به احترام گذاشتن به فرهنگ‌های محلی کمک می‌کند.",
+      "literacy_topic": "درس آزاد؛ پژوهش و گفت‌وگو دربارهٔ فرهنگ محلی",
+      "literacy_exercise": "یکی از رسم‌های محلی را در سه جمله توصیف کن.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 8,
+      "ch": 3,
+      "title": "دریاقلی",
+      "page": 58,
+      "focus": "فداکاری، مسئولیت و نشانه‌گذاری",
+      "summary": "این درس روایت اقدام هوشیارانهٔ دریاقلی در آگاه‌کردن دیگران از خطر در روزهای آغازین جنگ است. موضوع آموزشی آن شجاعت مسئولانه و فهم رویدادهاست.",
+      "words": [
+        [
+          "فداکاری",
+          "گذشتن از سود شخصی برای کمک به دیگران"
+        ],
+        [
+          "هشدار",
+          "خبر دادن از خطر"
+        ],
+        [
+          "مسئولیت",
+          "پاسخ‌گو بودن در برابر وظیفه"
+        ],
+        [
+          "شجاعت",
+          "دلیر بودن در موقعیت دشوار"
+        ]
+      ],
+      "language": "نشانه‌های نگارشی مانند نقطه، ویرگول، علامت سؤال و تعجب به خواندن و فهم متن کمک می‌کنند.",
+      "writing": "یک خبر کوتاه دربارهٔ انجام کاری مسئولانه بنویس و نشانه‌گذاری کن.",
+      "oral": "رویداد اصلی را با ترتیب «پیش از هشدار، هشدار، نتیجه» تعریف کن.",
+      "questions": [
+        {
+          "q": "نقش اصلی دریاقلی در داستان چیست؟",
+          "choices": [
+            "خبر دادن از خطر",
+            "ساختن مدرسه",
+            "نوشتن فرهنگ لغت",
+            "سرودن شعر"
+          ],
+          "answer": 0,
+          "explanation": "او با رساندن خبر خطر به دیگران کمک کرد.",
+          "skill": "درک مطلب",
+          "level": 1
+        },
+        {
+          "q": "در پایان یک پرسش معمولاً چه نشانه‌ای می‌آید؟",
+          "choices": [
+            "؟",
+            "،",
+            "؛",
+            "«"
+          ],
+          "answer": 0,
+          "explanation": "نشانهٔ سؤال در پایان جملهٔ پرسشی می‌آید.",
+          "skill": "دستور زبان",
+          "level": 2
+        },
+        {
+          "q": "برای بیان پیام یک داستانِ فداکاری کدام جمله دقیق‌تر است؟",
+          "choices": [
+            "بی‌تفاوتی به دیگران",
+            "آگاهی و اقدام مسئولانه اهمیت دارد",
+            "همیشه فقط برنده شدن مهم است",
+            "گفت‌وگو بی‌فایده است"
+          ],
+          "answer": 1,
+          "explanation": "پیام درس بر آگاهی، مسئولیت و کمک به دیگران تکیه دارد.",
+          "skill": "تفکر انتقادی",
+          "level": 3
+        }
+      ],
+      "open": "آیا شجاعت همیشه به معنای انجام کار خطرناک است؟ یک نمونهٔ شجاعت مسئولانه بگو.",
+      "kind": "درس",
+      "key": "l8",
+      "message": "هوشیاری و مسئولیت‌پذیری یک فرد می‌تواند به حفظ جان دیگران کمک کند.",
+      "literacy_topic": "نشانه‌های نگارشی، مکث و لحن درست",
+      "literacy_exercise": "برای جمله‌های خبری و پرسشی نشانهٔ پایانی مناسب بگذار.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 9,
+      "ch": 4,
+      "title": "رنج‌هایی کشیده‌ام که مپرس",
+      "page": 66,
+      "focus": "دهخدا، فرهنگ‌نویسی و پشتکار",
+      "summary": "بخشی از زندگی و تلاش‌های علی‌اکبر دهخدا و کار او در گردآوری واژه‌ها مطرح می‌شود. هدف، شناخت ارزش کوشش علمی و میراث زبان فارسی است.",
+      "words": [
+        [
+          "لغت‌نامه",
+          "کتاب گردآوری و توضیح واژه‌ها"
+        ],
+        [
+          "پژوهش",
+          "بررسی منظم برای یافتن پاسخ"
+        ],
+        [
+          "پشتکار",
+          "ادامه دادن با وجود دشواری"
+        ],
+        [
+          "فرهنگ‌نویس",
+          "گردآورنده و توضیح‌دهندهٔ واژه‌ها"
+        ]
+      ],
+      "language": "در کار با واژه‌نامه به ترتیب واژه‌ها، معنای مناسب در جمله و منبع توجه می‌کنیم.",
+      "writing": "یک فرهنگ کوچک ۵ واژه‌ای از واژه‌های خانواده یا محل زندگی تهیه کن.",
+      "oral": "شرح بده یک پژوهشگر چرا باید یادداشت‌های دقیق بردارد.",
+      "questions": [
+        {
+          "q": "دهخدا بیشتر با کدام اثر شناخته می‌شود؟",
+          "choices": [
+            "لغت‌نامه",
+            "شاهنامه",
+            "مثنوی معنوی",
+            "گلستان"
+          ],
+          "answer": 0,
+          "explanation": "علی‌اکبر دهخدا به‌ویژه برای لغت‌نامهٔ دهخدا شناخته می‌شود.",
+          "skill": "درک مطلب",
+          "level": 1
+        },
+        {
+          "q": "«پشتکار» یعنی چه؟",
+          "choices": [
+            "تلاش پیگیر",
+            "ترک کار در نخستین مشکل",
+            "فراموش کردن",
+            "عجلهٔ بی‌دلیل"
+          ],
+          "answer": 0,
+          "explanation": "پشتکار یعنی ادامه دادن کوشش.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "برای ساخت یک فرهنگ واژگان کوچک، نخست چه باید کرد؟",
+          "choices": [
+            "گردآوری واژه‌ها و بررسی معنا",
+            "نوشتن معناهای حدسی",
+            "حذف نمونه‌ها",
+            "انتخاب پاسخ‌های بی‌ربط"
+          ],
+          "answer": 0,
+          "explanation": "پژوهش زبانی به گردآوری دقیق داده نیاز دارد.",
+          "skill": "تفکر انتقادی",
+          "level": 3
+        }
+      ],
+      "open": "چگونه می‌توان از تلاش علمی دهخدا برای انجام تکلیف‌های خود الهام گرفت؟",
+      "kind": "درس",
+      "key": "l9",
+      "message": "کارهای بزرگ علمی به پشتکار، عشق به دانش و کوشش درازمدت نیاز دارند.",
+      "literacy_topic": "ساخت واژه با پسوند «نامه» و فرهنگ لغت",
+      "literacy_exercise": "با «نامه» دو ترکیب جدید بساز و معنایش را بگو.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 10,
+      "ch": 4,
+      "title": "عطار و جلال‌الدین محمد",
+      "page": 74,
+      "focus": "آشنایی با شاعران و قالب مثنوی",
+      "summary": "داستان دیدار عطار با جلال‌الدین محمد نوجوان و نقش کتاب و اندیشه در رشد علمی را دنبال می‌کنیم. در دانش ادبی با قالب مثنوی آشنا می‌شویم.",
+      "words": [
+        [
+          "عطار",
+          "نام شاعر و عارف ایرانی"
+        ],
+        [
+          "جلال‌الدین محمد",
+          "نام مولوی"
+        ],
+        [
+          "مثنوی",
+          "قالب شعری با قافیهٔ مستقل در هر بیت"
+        ],
+        [
+          "هدیه",
+          "چیزی که به کسی پیشکش می‌شود"
+        ]
+      ],
+      "language": "در مثنوی، دو مصراعِ هر بیت هم‌قافیه‌اند و قافیهٔ بیت بعد می‌تواند متفاوت باشد.",
+      "writing": "داستان یک دیدار اثرگذار را در ۵ جمله بازگو کن.",
+      "oral": "توضیح بده چرا هدیه دادن کتاب می‌تواند ارزشمند باشد.",
+      "questions": [
+        {
+          "q": "جلال‌الدین محمد با کدام نام شناخته می‌شود؟",
+          "choices": [
+            "مولوی",
+            "فردوسی",
+            "حافظ",
+            "دهخدا"
+          ],
+          "answer": 0,
+          "explanation": "جلال‌الدین محمد همان مولوی است.",
+          "skill": "درک مطلب",
+          "level": 1
+        },
+        {
+          "q": "کتاب مشهور مولوی کدام است؟",
+          "choices": [
+            "مثنوی معنوی",
+            "شاهنامه",
+            "بوستان",
+            "لغت‌نامه"
+          ],
+          "answer": 0,
+          "explanation": "مثنوی معنوی از آثار شناخته‌شدهٔ مولوی است.",
+          "skill": "دانش ادبی",
+          "level": 2
+        },
+        {
+          "q": "قافیه در قالب مثنوی چگونه است؟",
+          "choices": [
+            "هر بیت قافیهٔ مستقل دارد",
+            "همهٔ بیت‌ها فقط یک قافیه دارند",
+            "هیچ بیتی قافیه ندارد",
+            "قافیه فقط در عنوان می‌آید"
+          ],
+          "answer": 0,
+          "explanation": "در مثنوی دو مصراع هر بیت هم‌قافیه‌اند.",
+          "skill": "دانش ادبی",
+          "level": 3
+        }
+      ],
+      "open": "اگر بخواهی به یک دوست کتاب هدیه بدهی، چه ویژگی‌هایی را در انتخاب آن در نظر می‌گیری؟",
+      "kind": "درس",
+      "key": "l10",
+      "message": "انس با کتاب و اهل دانش می‌تواند بر رشد فکری و شخصیت انسان اثر بگذارد.",
+      "literacy_topic": "قالب شعری مثنوی و روایت ادبی",
+      "literacy_exercise": "تفاوت قافیه در دو بیت مثنوی را توضیح بده.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 11,
+      "ch": 4,
+      "title": "شهدا خورشیدند",
+      "page": 78,
+      "focus": "تصویرسازی شاعرانه و تشبیه",
+      "summary": "در این درس تصویرهای شاعرانه برای یادکرد از شهدا به کار رفته است. مهارت ادبی اصلی، تشخیص تشبیه و توضیح تأثیر آن بر معنای نوشته است.",
+      "words": [
+        [
+          "تشبیه",
+          "مانند کردن دو چیز"
+        ],
+        [
+          "شهادت",
+          "جان‌باختن در راه باور یا دفاع"
+        ],
+        [
+          "شقایق",
+          "نام گلی سرخ‌رنگ"
+        ],
+        [
+          "ایثار",
+          "ازخودگذشتگی"
+        ]
+      ],
+      "language": "تشبیه، مانند کردن کسی یا چیزی به چیزی دیگر است؛ مانند «دانش، چراغ راه است».",
+      "writing": "دو تشبیه نو دربارهٔ امید یا دانش بنویس.",
+      "oral": "با لحن مناسب، معنای یک تشبیه را توضیح بده.",
+      "questions": [
+        {
+          "q": "«شهدا خورشیدند» نمونهٔ کدام آرایه است؟",
+          "choices": [
+            "تشبیه",
+            "پرسش",
+            "کنایهٔ دستوری",
+            "شمردن"
+          ],
+          "answer": 0,
+          "explanation": "در این عبارت، شهدا به خورشید مانند شده‌اند.",
+          "skill": "دانش ادبی",
+          "level": 1
+        },
+        {
+          "q": "«ایثار» به چه معناست؟",
+          "choices": [
+            "ازخودگذشتگی",
+            "بی‌حوصلگی",
+            "پرسش‌گری",
+            "تماشا"
+          ],
+          "answer": 0,
+          "explanation": "ایثار یعنی مقدم دانستن یاری به دیگران بر سود شخصی.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "کدام جمله تشبیه دارد؟",
+          "choices": [
+            "او مثل خورشید می‌درخشید.",
+            "دیروز باران بارید.",
+            "در را باز کن.",
+            "کجا می‌روی؟"
+          ],
+          "answer": 0,
+          "explanation": "واژهٔ «مثل» رابطهٔ شباهت را نشان می‌دهد.",
+          "skill": "دانش ادبی",
+          "level": 3
+        }
+      ],
+      "open": "چرا نویسندگان در بیان اندیشه‌ها از تشبیه و تصویرسازی استفاده می‌کنند؟",
+      "kind": "درس",
+      "key": "l11",
+      "message": "تصویرهای ادبی مانند تشبیه، احترام و یادبود انسان‌های فداکار را اثرگذارتر بیان می‌کنند.",
+      "literacy_topic": "تشبیه و تصویرسازی شاعرانه",
+      "literacy_exercise": "از یک تشبیه تازه برای توصیف امید استفاده کن.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 12,
+      "ch": 5,
+      "title": "دوستی / مشاوره",
+      "page": 84,
+      "focus": "ویژگی دوست خوب و ارزش مشورت",
+      "summary": "این درس به انتخاب دوست، پایداری دوستی و بهره‌گرفتن از تجربهٔ دیگران هنگام تصمیم‌گیری توجه دارد.",
+      "words": [
+        [
+          "مشورت",
+          "نظرخواهی از دیگران"
+        ],
+        [
+          "رفاقت",
+          "دوستی"
+        ],
+        [
+          "تدبیر",
+          "سنجیده‌کاری"
+        ],
+        [
+          "کهن",
+          "قدیمی"
+        ]
+      ],
+      "language": "در متن‌های قدیمی ممکن است ساخت فعل با زبان امروز تفاوت داشته باشد؛ مانند «همی دار» به معنای «نگه دار».",
+      "writing": "یک گفت‌وگوی کوتاه دربارهٔ انتخاب دوست بنویس.",
+      "oral": "دربارهٔ موقعیتی سخن بگو که مشورت به حل مسئله کمک می‌کند.",
+      "questions": [
+        {
+          "q": "«مشورت» یعنی چه؟",
+          "choices": [
+            "نظرخواهی از افراد آگاه",
+            "تصمیم‌گیری با عجله",
+            "پنهان کردن همهٔ پرسش‌ها",
+            "تقلید بی‌فکر"
+          ],
+          "answer": 0,
+          "explanation": "مشورت یعنی بهره گرفتن از دیدگاه دیگران.",
+          "skill": "واژگان",
+          "level": 1
+        },
+        {
+          "q": "«دوستان کهن» یعنی چه؟",
+          "choices": [
+            "دوستان قدیمی",
+            "دوستان تازه",
+            "افراد ناشناس",
+            "همکلاسی‌های امروز"
+          ],
+          "answer": 0,
+          "explanation": "کهن یعنی قدیمی.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "هنگام مشورت بهترین کار کدام است؟",
+          "choices": [
+            "شنیدن دلیل‌های مختلف و سپس تصمیم‌گیری",
+            "واگذاری مسئولیت به همه",
+            "نادیده گرفتن همهٔ نظرها",
+            "قضاوت قبل از شنیدن"
+          ],
+          "answer": 0,
+          "explanation": "مشورت راه جمع‌آوری دیدگاه و تصمیم آگاهانه است.",
+          "skill": "تفکر انتقادی",
+          "level": 3
+        }
+      ],
+      "open": "چه تفاوتی بین دوست خوب و کسی که فقط گاهی با او گفت‌وگو می‌کنیم وجود دارد؟",
+      "kind": "درس",
+      "key": "l12",
+      "message": "دوستی ارزشمند نیازمند خردمندی، وفاداری، احترام و مشورت در تصمیم‌هاست.",
+      "literacy_topic": "معادل امروزی فعل‌های کهن",
+      "literacy_exercise": "«دوست همی طلب» را به فارسی امروز بازنویسی کن.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 13,
+      "ch": 5,
+      "title": "درس آزاد ۲: فرهنگ بومی",
+      "page": 90,
+      "focus": "پژوهش درباره میراث محلی",
+      "summary": "دومین درس آزاد فرصت می‌دهد یک داستان، شخصیت، آیین یا شیوهٔ زندگی بومی را با مشورت معلم و هم‌کلاسی‌ها روایت کنیم.",
+      "words": [
+        [
+          "روایت",
+          "بازگو کردن داستان"
+        ],
+        [
+          "پژوهش میدانی",
+          "بررسی با پرس‌وجو و مشاهده"
+        ],
+        [
+          "سنت",
+          "رسمی که در گذر زمان منتقل شده"
+        ],
+        [
+          "اصالت",
+          "ریشه‌داری"
+        ]
+      ],
+      "language": "داستان بومی را با شخصیت، زمان، مکان و رویداد اصلی بازسازی می‌کنیم.",
+      "writing": "یک داستان یا ضرب‌المثل بومی را با ذکر گوینده در چند جمله ثبت کن.",
+      "oral": "از یک عضو خانواده درباره ریشهٔ یک نام محلی سؤال کن.",
+      "questions": [
+        {
+          "q": "در درس آزاد دوم، متن نهایی باید چگونه انتخاب شود؟",
+          "choices": [
+            "متناسب با فرهنگ محلی",
+            "کاملاً یکسان برای همه شهرها",
+            "بدون مشارکت دانش‌آموز",
+            "بی‌ارتباط با موضوع"
+          ],
+          "answer": 0,
+          "explanation": "درس آزاد برای محتوای بومی و مشارکتی طراحی شده است.",
+          "skill": "درک مطلب",
+          "level": 1
+        },
+        {
+          "q": "در بازگویی داستان کدام جزء لازم است؟",
+          "choices": [
+            "شخصیت و رویداد",
+            "فقط رنگ صفحه",
+            "فقط تعداد حروف",
+            "فقط شمارهٔ صفحه"
+          ],
+          "answer": 0,
+          "explanation": "داستان معمولاً شخصیت و رویداد دارد.",
+          "skill": "درک مطلب",
+          "level": 2
+        },
+        {
+          "q": "هنگام ثبت یک روایت شفاهی چه کاری بهتر است؟",
+          "choices": [
+            "ذکر منبع روایت و ثبت دقیق",
+            "تغییر نام روایت‌گر بدون دلیل",
+            "ساختن اطلاعات نامطمئن",
+            "حذف زمینهٔ فرهنگی"
+          ],
+          "answer": 0,
+          "explanation": "ثبت منبع باعث امانت‌داری در پژوهش می‌شود.",
+          "skill": "تفکر انتقادی",
+          "level": 3
+        }
+      ],
+      "open": "یک ویژگی از فرهنگ محل خودت را معرفی کن که کمتر در کتاب‌ها به آن پرداخته‌اند.",
+      "kind": "درس",
+      "key": "l13",
+      "message": "گفت‌وگو با بزرگان و پژوهش درباره میراث محلی، فرهنگ بومی را زنده نگه می‌دارد.",
+      "literacy_topic": "درس آزاد؛ کاربرد واژه‌ها و روایت محلی",
+      "literacy_exercise": "سه واژهٔ بومی را همراه با معنای فارسی بنویس.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 14,
+      "ch": 5,
+      "title": "راز زندگی",
+      "page": 93,
+      "focus": "نگاه مثبت و معنای زندگی",
+      "summary": "گفت‌وگوی گل و غنچه تصویری ادبی از زندگی و شکوفایی می‌سازد. درک نظر شخصیت‌ها و استدلال درباره تفاوت دیدگاه‌ها محور آموزش است.",
+      "words": [
+        [
+          "غنچه",
+          "گلی که هنوز کاملاً باز نشده"
+        ],
+        [
+          "شکفتن",
+          "باز شدن گل"
+        ],
+        [
+          "راز",
+          "موضوع نهفته"
+        ],
+        [
+          "امید",
+          "چشم‌داشت به نتیجهٔ خوب"
+        ]
+      ],
+      "language": "در گفت‌وگوی داستانی، دیدگاه هر شخصیت را جداگانه پیدا و با دیدگاه دیگر مقایسه کن.",
+      "writing": "از زبان یک دانه، یک متن کوتاه دربارهٔ رشد و امید بنویس.",
+      "oral": "تفاوت نگاه گل و غنچه به زندگی را با جمله‌های خودت بیان کن.",
+      "questions": [
+        {
+          "q": "دو شخصیت گفت‌وگو در «راز زندگی» چه هستند؟",
+          "choices": [
+            "گل و غنچه",
+            "رستم و رخش",
+            "دو پادشاه",
+            "دو پرنده"
+          ],
+          "answer": 0,
+          "explanation": "گفت‌وگو میان گل و غنچه شکل می‌گیرد.",
+          "skill": "درک مطلب",
+          "level": 1
+        },
+        {
+          "q": "«شکفتن» چه معنایی دارد؟",
+          "choices": [
+            "باز شدن گل",
+            "خشک شدن خاک",
+            "بسته شدن در",
+            "پوشاندن پنجره"
+          ],
+          "answer": 0,
+          "explanation": "شکفتن یعنی باز شدن گل یا آشکار شدن استعداد.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "برای مقایسهٔ دو دیدگاه نخست چه باید کرد؟",
+          "choices": [
+            "هر دیدگاه را جداگانه فهمید",
+            "فقط یکی را شنید",
+            "به هر دو برچسب زد",
+            "پاسخ را حدس زد"
+          ],
+          "answer": 0,
+          "explanation": "مقایسهٔ درست با درک جداگانهٔ نظرها آغاز می‌شود.",
+          "skill": "تفکر انتقادی",
+          "level": 3
+        }
+      ],
+      "open": "آیا شادی به معنای نادیده گرفتن سختی‌هاست؟ دیدگاهت را توضیح بده.",
+      "kind": "درس",
+      "key": "l14",
+      "message": "دیدن جنبه‌های روشن زندگی و گفت‌وگوی سازنده، به رشد و شکوفایی کمک می‌کند.",
+      "literacy_topic": "جان‌بخشی و گفت‌وگوی شخصیت‌های غیرانسانی",
+      "literacy_exercise": "دو جمله گفت‌وگوی خیالی میان باد و درخت بنویس.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 15,
+      "ch": 6,
+      "title": "میوه‌ی هنر",
+      "page": 98,
+      "focus": "ارزش کردار نیک و شبه‌جمله",
+      "summary": "درس با روایت شاعرانه، سودمندی کردار را در برابر ادعا نشان می‌دهد. دانش زبانی، شبه‌جمله و برخی صورت‌های کوتاه‌شدهٔ واژه‌ها را معرفی می‌کند.",
+      "words": [
+        [
+          "کردار",
+          "رفتار و عمل"
+        ],
+        [
+          "هنر",
+          "توانایی و فضیلت"
+        ],
+        [
+          "آوخ",
+          "واژهٔ بیان اندوه"
+        ],
+        [
+          "شبه‌جمله",
+          "واژه یا عبارتی در نقش معنای یک جمله"
+        ]
+      ],
+      "language": "«آفرین!» و «افسوس!» نمونه‌های شبه‌جمله‌اند؛ اجزای کامل جمله را ندارند، اما پیام مستقلی می‌رسانند.",
+      "writing": "سه جمله بنویس که در آنها ارزش کار مفید را نشان بدهی.",
+      "oral": "با لحن مناسب، دو شبه‌جملهٔ شادی و اندوه را بیان کن.",
+      "questions": [
+        {
+          "q": "کدام نمونه شبه‌جمله است؟",
+          "choices": [
+            "افسوس!",
+            "من کتاب خواندم.",
+            "او آمد.",
+            "باران می‌بارد."
+          ],
+          "answer": 0,
+          "explanation": "«افسوس!» بدون ساخت کامل جمله پیام احساسی مستقلی دارد.",
+          "skill": "دستور زبان",
+          "level": 1
+        },
+        {
+          "q": "«کردار» چه معنایی دارد؟",
+          "choices": [
+            "عمل و رفتار",
+            "داستان",
+            "آرزو",
+            "خوراک"
+          ],
+          "answer": 0,
+          "explanation": "کردار یعنی عمل و رفتار.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "کدام انتخاب پیام درس را بهتر نشان می‌دهد؟",
+          "choices": [
+            "کار نیک از ادعای بی‌عمل ارزشمندتر است",
+            "فقط حرف زدن کافی است",
+            "هیچ کاری نیاز به کوشش ندارد",
+            "ظاهر همیشه مهم‌تر از رفتار است"
+          ],
+          "answer": 0,
+          "explanation": "پیام درس بر ارزش رفتار و سودمندی تأکید دارد.",
+          "skill": "درک مطلب",
+          "level": 3
+        }
+      ],
+      "open": "چرا ممکن است رفتار یک نفر بیش از سخنان او بر دیگران اثر بگذارد؟",
+      "kind": "درس",
+      "key": "l15",
+      "message": "ارزش هر کس به کارهای سودمند و نیک اوست، نه فقط گفته‌هایش.",
+      "literacy_topic": "شبه‌جمله و تفاوت کردار و گفتار",
+      "literacy_exercise": "دو شبه‌جمله مانند «آفرین!» و «ای کاش!» بساز.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 16,
+      "ch": 6,
+      "title": "آداب مطالعه",
+      "page": 101,
+      "focus": "قصه‌خوانی، سخن‌گفتن و مطالعه",
+      "summary": "درس به ارزش قصه‌خواندن، آموختن از روایت‌ها و رعایت آداب سخن اشاره دارد و روش‌های مطالعهٔ مؤثر را به گفت‌وگو می‌گذارد.",
+      "words": [
+        [
+          "مطالعه",
+          "خواندن با دقت و هدف"
+        ],
+        [
+          "آداب",
+          "روش‌ها و رفتارهای پسندیده"
+        ],
+        [
+          "روایت",
+          "بازگویی رخداد"
+        ],
+        [
+          "تأمل",
+          "درنگ و اندیشیدن"
+        ]
+      ],
+      "language": "برای خلاصه‌نویسی، شخصیت‌ها، مسئله، رویدادهای اصلی و پیام را پیدا کن.",
+      "writing": "یک داستان کوتاه خوانده‌شده را در ۴ جمله خلاصه کن.",
+      "oral": "سه مورد از آداب سخن گفتن در جمع را معرفی کن.",
+      "questions": [
+        {
+          "q": "کدام کار به مطالعهٔ بهتر کمک می‌کند؟",
+          "choices": [
+            "خلاصه کردن نکات اصلی",
+            "خواندن بی‌وقفه بدون فهم",
+            "بی‌توجهی به پرسش‌ها",
+            "هم‌زمان بازی‌کردن"
+          ],
+          "answer": 0,
+          "explanation": "خلاصه کردن به سازمان‌دهی فهم کمک می‌کند.",
+          "skill": "درک مطلب",
+          "level": 1
+        },
+        {
+          "q": "«تأمل» به چه معناست؟",
+          "choices": [
+            "درنگ و فکر کردن",
+            "شتابیدن",
+            "فریاد زدن",
+            "فراموشی"
+          ],
+          "answer": 0,
+          "explanation": "تأمل یعنی با دقت فکر کردن.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "در یک بازگویی درست، کدام بخش مهم است؟",
+          "choices": [
+            "رویداد و پیام اصلی",
+            "تمام حاشیه‌ها بدون نظم",
+            "تنها نام نویسنده",
+            "فقط جملهٔ آخر"
+          ],
+          "answer": 0,
+          "explanation": "شناسایی رویداد و پیام به خلاصهٔ دقیق کمک می‌کند.",
+          "skill": "درک مطلب",
+          "level": 3
+        }
+      ],
+      "open": "از نظر تو چه چیزی باعث می‌شود یک داستان، آموزنده و جذاب باشد؟",
+      "kind": "درس",
+      "key": "l16",
+      "message": "مطالعهٔ هدفمند و قصه‌خوانی، اندیشه و توانایی سخن گفتن و نوشتن را پرورش می‌دهد.",
+      "literacy_topic": "واژه‌سازی با «خوان / خوانی»",
+      "literacy_exercise": "با «خوان» یا «خوانی» دو ترکیب درست بساز.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 17,
+      "ch": 6,
+      "title": "ستاره‌ی روشن",
+      "page": 106,
+      "focus": "راستی، نیک‌خویی و شخصیت‌های تاریخی",
+      "summary": "درس با روایتی اخلاقی بر راستگویی و نیک‌خویی تأکید می‌کند. دانش‌آموز باید اندرزها و پیام‌های متن را به نمونه‌هایی از زندگی روزمره پیوند دهد.",
+      "words": [
+        [
+          "راستی",
+          "درستی و راستگویی"
+        ],
+        [
+          "نیک‌خویی",
+          "خوش‌اخلاقی"
+        ],
+        [
+          "پند",
+          "اندرز"
+        ],
+        [
+          "امانت‌داری",
+          "نگهداری درست از امانت"
+        ]
+      ],
+      "language": "برای فهم یک متن اندرزگونه، هر سفارش را با یک مثال روزمره توضیح بده.",
+      "writing": "در قالب نامه، سه توصیهٔ مهربانانه به یک دوست کوچک‌تر بنویس.",
+      "oral": "با مثال بگو چرا راستگویی اعتماد دیگران را بیشتر می‌کند.",
+      "questions": [
+        {
+          "q": "در «ستاره‌ی روشن» کدام رفتار ستوده می‌شود؟",
+          "choices": [
+            "راستگویی",
+            "فریب دادن",
+            "بدقولی",
+            "خودخواهی"
+          ],
+          "answer": 0,
+          "explanation": "متن بر راستی و رفتار نیک تأکید می‌کند.",
+          "skill": "درک مطلب",
+          "level": 1
+        },
+        {
+          "q": "«پند» یعنی چه؟",
+          "choices": [
+            "اندرز",
+            "بازی",
+            "مسافرت",
+            "خبر"
+          ],
+          "answer": 0,
+          "explanation": "پند همان اندرز است.",
+          "skill": "واژگان",
+          "level": 2
+        },
+        {
+          "q": "کدام نمونه به امانت‌داری نزدیک‌تر است؟",
+          "choices": [
+            "بازگرداندن وسیلهٔ قرضی سالم و به‌موقع",
+            "برداشتن وسیلهٔ دیگران",
+            "پنهان‌کردن اشتباه",
+            "شکستن قول"
+          ],
+          "answer": 0,
+          "explanation": "حفظ و بازگرداندن امانت نشانهٔ مسئولیت‌پذیری است.",
+          "skill": "تفکر انتقادی",
+          "level": 3
+        }
+      ],
+      "open": "وقتی راست گفتن سخت است، چه چیزی به تصمیم درست کمک می‌کند؟",
+      "kind": "درس",
+      "key": "l17",
+      "message": "راستی، فروتنی و خوش‌رفتاری پایهٔ اعتماد و زندگی شایسته‌اند.",
+      "literacy_topic": "واژه‌های متضاد و دریافت پیام اخلاقی",
+      "literacy_exercise": "دو جفت واژهٔ مخالف و یک جمله با آن‌ها بنویس.",
+      "vocab_tip": "معنی هر واژه را بخوان؛ سپس آن را در یک جملهٔ تازه به کار ببر.",
+      "reading": "متن همین درس را از روی کتاب بخوان، مکث و لحن را رعایت کن و پیامش را با زبان خود بازگو کن.",
+      "study_guide": [
+        "۱. معنی واژگان را مرور کن.",
+        "۲. خلاصه و پیام را به زبان خود توضیح بده.",
+        "۳. نکتهٔ زبانی را با یک مثال تازه تمرین کن.",
+        "۴. بازی واژگان انجام بده و سپس آزمون کوتاه بده."
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    }
+  ],
+  "extras": [
+    {
+      "id": 1,
+      "title": "ستایش: به نام آن که جان را فکرت آموخت",
+      "page": 8,
+      "ch": 1,
+      "focus": "شعر آغاز کتاب؛ توجه به ستایش، اندیشه و خوانش درست",
+      "prompt": "در یک جمله، ارتباط دانایی و سپاسگزاری را توضیح بده.",
+      "kind": "بخش مکمل",
+      "key": "e1",
+      "summary": "شعر آغاز کتاب دربارهٔ ارزش اندیشه و آگاهی و ستایش آفریننده است.",
+      "message": "فکر و دانایی راهی برای بهتر دیدن جهان‌اند.",
+      "words": [
+        [
+          "اندیشه",
+          "فکر کردن"
+        ],
+        [
+          "فروغ",
+          "روشنی"
+        ],
+        [
+          "ستایش",
+          "سپاس و بزرگداشت"
+        ]
+      ],
+      "language": "خواندن با مکث مناسب، تصویرهای شاعرانه و دریافت پیام",
+      "literacy_topic": "خواندن با مکث مناسب، تصویرهای شاعرانه و دریافت پیام",
+      "literacy_exercise": "در یک جمله، ارتباط دانایی و سپاسگزاری را توضیح بده.",
+      "writing": "در یک جمله، ارتباط دانایی و سپاسگزاری را توضیح بده.",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «ستایش: به نام آن که جان را فکرت آموخت» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "فکر و دانایی راهی برای بهتر دیدن جهان‌اند.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "فکر و دانایی راهی برای بهتر دیدن جهان‌اند.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "حکایت: محبت",
+      "page": 13,
+      "ch": 1,
+      "focus": "دوست داشتن، گذشت و به یاد سپردن نیکی",
+      "prompt": "چرا بعضی کارهای خوب را باید در یاد نگه داشت؟",
+      "kind": "بخش مکمل",
+      "key": "e2",
+      "summary": "داستان دو دوست از رنجش و نیکی می‌گوید؛ یکی گذشتن از رنجش و دیگری به یادسپردن مهربانی را انتخاب می‌کند.",
+      "message": "از خطاها با خردمندی بگذریم و محبت دیگران را قدر بدانیم.",
+      "words": [
+        [
+          "محبت",
+          "دوستی و مهربانی"
+        ],
+        [
+          "رنجش",
+          "دلخوری"
+        ],
+        [
+          "گذشت",
+          "چشم‌پوشی از خطا"
+        ]
+      ],
+      "language": "تفاوت کنش شخصیت‌ها و نتیجه‌گیری اخلاقی",
+      "literacy_topic": "تفاوت کنش شخصیت‌ها و نتیجه‌گیری اخلاقی",
+      "literacy_exercise": "چرا بعضی کارهای خوب را باید در یاد نگه داشت؟",
+      "writing": "چرا بعضی کارهای خوب را باید در یاد نگه داشت؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «حکایت: محبت» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "از خطاها با خردمندی بگذریم و محبت دیگران را قدر بدانیم.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "از خطاها با خردمندی بگذریم و محبت دیگران را قدر بدانیم.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "بخوان و حفظ کن: ای مادر عزیز",
+      "page": 18,
+      "ch": 1,
+      "focus": "خوانش شعر با لحن مهرآمیز و بیان عاطفه",
+      "prompt": "سه کلمه دربارهٔ سپاس از خانواده بنویس.",
+      "kind": "بخش مکمل",
+      "key": "e3",
+      "summary": "این شعر برای قدردانی از زحمت‌ها و مهر مادر سروده شده است.",
+      "message": "محبت و فداکاری مادر شایستهٔ قدرشناسی است.",
+      "words": [
+        [
+          "فدا",
+          "قربانی کردن"
+        ],
+        [
+          "صفا",
+          "پاکی و صمیمیت"
+        ],
+        [
+          "وفا",
+          "پایبندی به مهر"
+        ]
+      ],
+      "language": "خواندن با لحن احساسی و یافتن واژه‌های عاطفی",
+      "literacy_topic": "خواندن با لحن احساسی و یافتن واژه‌های عاطفی",
+      "literacy_exercise": "سه کلمه دربارهٔ سپاس از خانواده بنویس.",
+      "writing": "سه کلمه دربارهٔ سپاس از خانواده بنویس.",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و حفظ کن: ای مادر عزیز» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "محبت و فداکاری مادر شایستهٔ قدرشناسی است.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "محبت و فداکاری مادر شایستهٔ قدرشناسی است.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "بخوان و بیندیش: هدهد",
+      "page": 20,
+      "ch": 1,
+      "focus": "خواندن با دقت و یافتن پیام داستان",
+      "prompt": "برای شناخت پیام یک داستان چه پرسش‌هایی می‌پرسی؟",
+      "kind": "بخش مکمل",
+      "key": "e4",
+      "summary": "در داستان «هدهد» پرنده‌ای باهوش به هشدار پیرزن بی‌توجهی می‌کند و بر اثر غفلت گرفتار می‌شود.",
+      "message": "هوش بدون توجه به تجربه و هشدار دیگران کافی نیست.",
+      "words": [
+        [
+          "هدهد",
+          "نام یک پرنده"
+        ],
+        [
+          "دام",
+          "وسیلهٔ شکار"
+        ],
+        [
+          "غفلت",
+          "بی‌توجهی"
+        ]
+      ],
+      "language": "علت و معلول، هشدار و پیش‌بینی پایان داستان",
+      "literacy_topic": "علت و معلول، هشدار و پیش‌بینی پایان داستان",
+      "literacy_exercise": "برای شناخت پیام یک داستان چه پرسش‌هایی می‌پرسی؟",
+      "writing": "برای شناخت پیام یک داستان چه پرسش‌هایی می‌پرسی؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و بیندیش: هدهد» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "هوش بدون توجه به تجربه و هشدار دیگران کافی نیست.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "هوش بدون توجه به تجربه و هشدار دیگران کافی نیست.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "بخوان و حفظ کن: سخن",
+      "page": 30,
+      "ch": 2,
+      "focus": "دقت در گفتار و خوانش آهنگین",
+      "prompt": "چرا خوب است پیش از سخن گفتن فکر کنیم؟",
+      "kind": "بخش مکمل",
+      "key": "e5",
+      "summary": "این شعر دربارهٔ جایگاه درست سخن و ارزش سنجیده حرف زدن است.",
+      "message": "پیش از سخن گفتن باید فکر کنیم و به پیامد کلمات خود توجه داشته باشیم.",
+      "words": [
+        [
+          "سخن",
+          "گفتار"
+        ],
+        [
+          "خرد",
+          "عقل"
+        ],
+        [
+          "سنجیده",
+          "با فکر و حساب‌شده"
+        ]
+      ],
+      "language": "لحن شعر، پیام و کاربرد آن در گفت‌وگو",
+      "literacy_topic": "لحن شعر، پیام و کاربرد آن در گفت‌وگو",
+      "literacy_exercise": "چرا خوب است پیش از سخن گفتن فکر کنیم؟",
+      "writing": "چرا خوب است پیش از سخن گفتن فکر کنیم؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و حفظ کن: سخن» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "پیش از سخن گفتن باید فکر کنیم و به پیامد کلمات خود توجه داشته باشیم.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "پیش از سخن گفتن باید فکر کنیم و به پیامد کلمات خود توجه داشته باشیم.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "حکایت: علم و عمل",
+      "page": 36,
+      "ch": 2,
+      "focus": "ارتباط دانایی و رفتار؛ حکایت سعدی",
+      "prompt": "یک مثال بزن که دانستن بدون عمل کافی نباشد.",
+      "kind": "بخش مکمل",
+      "key": "e6",
+      "summary": "حکایت «علم و عمل» پیوند میان آگاهی و رفتار را یادآور می‌شود.",
+      "message": "دانستن زمانی اثرگذار است که در عمل دیده شود.",
+      "words": [
+        [
+          "علم",
+          "دانایی"
+        ],
+        [
+          "عمل",
+          "کردار"
+        ],
+        [
+          "ثمر",
+          "نتیجه"
+        ]
+      ],
+      "language": "مقایسهٔ دانایی نظری و رفتار واقعی",
+      "literacy_topic": "مقایسهٔ دانایی نظری و رفتار واقعی",
+      "literacy_exercise": "یک مثال بزن که دانستن بدون عمل کافی نباشد.",
+      "writing": "یک مثال بزن که دانستن بدون عمل کافی نباشد.",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «حکایت: علم و عمل» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "دانستن زمانی اثرگذار است که در عمل دیده شود.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "دانستن زمانی اثرگذار است که در عمل دیده شود.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "بخوان و بیندیش: دوستان همدل",
+      "page": 43,
+      "ch": 2,
+      "focus": "همدلی و پذیرش تفاوت‌های زبانی و فرهنگی",
+      "prompt": "اگر همکلاسی تازه‌وارد زبان محلی را بلد نباشد، چه کمکی می‌کنی؟",
+      "kind": "بخش مکمل",
+      "key": "e7",
+      "summary": "داستان دانش‌آموزی تازه‌وارد در محیطی با زبان متفاوت و نقش هم‌دلی هم‌کلاسی‌ها در بازگشت او به مدرسه است.",
+      "message": "دوستی و همدلی از تفاوت زبان‌ها فراتر می‌رود.",
+      "words": [
+        [
+          "همدل",
+          "دارای احساس مشترک"
+        ],
+        [
+          "غریب",
+          "ناآشنا"
+        ],
+        [
+          "اتحاد",
+          "همبستگی"
+        ]
+      ],
+      "language": "ترتیب رویداد، گفت‌وگو و تصمیم شخصیت‌ها",
+      "literacy_topic": "ترتیب رویداد، گفت‌وگو و تصمیم شخصیت‌ها",
+      "literacy_exercise": "اگر همکلاسی تازه‌وارد زبان محلی را بلد نباشد، چه کمکی می‌کنی؟",
+      "writing": "اگر همکلاسی تازه‌وارد زبان محلی را بلد نباشد، چه کمکی می‌کنی؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و بیندیش: دوستان همدل» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "دوستی و همدلی از تفاوت زبان‌ها فراتر می‌رود.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "دوستی و همدلی از تفاوت زبان‌ها فراتر می‌رود.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 8,
+      "title": "حکایت: انواع مردم",
+      "page": 53,
+      "ch": 3,
+      "focus": "توجه به رفتار انسان‌ها و اندیشه درباره آن",
+      "prompt": "آیا می‌توان آدم‌ها را فقط از ظاهرشان شناخت؟ چرا؟",
+      "kind": "بخش مکمل",
+      "key": "e8",
+      "summary": "حکایت افراد جامعه را با مثال‌های ساده از جهت تأثیرشان بر زندگی انسان دسته‌بندی می‌کند.",
+      "message": "در انتخاب همراه و دوست، تأثیر رفتار دیگران را بشناسیم.",
+      "words": [
+        [
+          "انواع",
+          "گونه‌ها"
+        ],
+        [
+          "تأثیر",
+          "اثرگذاری"
+        ],
+        [
+          "صبوری",
+          "شکیبایی"
+        ]
+      ],
+      "language": "تشبیه و دسته‌بندی مثال‌های اجتماعی",
+      "literacy_topic": "تشبیه و دسته‌بندی مثال‌های اجتماعی",
+      "literacy_exercise": "آیا می‌توان آدم‌ها را فقط از ظاهرشان شناخت؟ چرا؟",
+      "writing": "آیا می‌توان آدم‌ها را فقط از ظاهرشان شناخت؟ چرا؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «حکایت: انواع مردم» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "در انتخاب همراه و دوست، تأثیر رفتار دیگران را بشناسیم.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "در انتخاب همراه و دوست، تأثیر رفتار دیگران را بشناسیم.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 9,
+      "title": "بخوان و حفظ کن: همه از خاک پاک ایرانیم",
+      "page": 56,
+      "ch": 3,
+      "focus": "حس همبستگی و روخوانی شعر",
+      "prompt": "یک جمله دربارهٔ همکاری مردم ایران بنویس.",
+      "kind": "بخش مکمل",
+      "key": "e9",
+      "summary": "شعر بر پیوند مردم ایران با سرزمین و هویت مشترکشان تأکید می‌کند.",
+      "message": "گوناگونی مردم ایران می‌تواند با همبستگی و احترام همراه باشد.",
+      "words": [
+        [
+          "میهن",
+          "وطن"
+        ],
+        [
+          "پاک",
+          "پاکیزه"
+        ],
+        [
+          "همبستگی",
+          "اتحاد"
+        ]
+      ],
+      "language": "لحن حماسی و واژه‌های میهنی",
+      "literacy_topic": "لحن حماسی و واژه‌های میهنی",
+      "literacy_exercise": "یک جمله دربارهٔ همکاری مردم ایران بنویس.",
+      "writing": "یک جمله دربارهٔ همکاری مردم ایران بنویس.",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و حفظ کن: همه از خاک پاک ایرانیم» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "گوناگونی مردم ایران می‌تواند با همبستگی و احترام همراه باشد.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "گوناگونی مردم ایران می‌تواند با همبستگی و احترام همراه باشد.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 10,
+      "title": "بخوان و بیندیش: تندگویان",
+      "page": 62,
+      "ch": 3,
+      "focus": "خوانش روایت و بررسی شجاعت و میهن‌دوستی",
+      "prompt": "کدام تصمیم یک شخصیت بر رویداد داستان اثر گذاشت؟",
+      "kind": "بخش مکمل",
+      "key": "e10",
+      "summary": "متنی دربارهٔ زندگی، کوشش و مسئولیت‌پذیری محمدجواد تندگویان در روزگار جنگ است.",
+      "message": "دانش، کوشش و مسئولیت‌پذیری می‌تواند در خدمت مردم باشد.",
+      "words": [
+        [
+          "اسارت",
+          "در بند بودن"
+        ],
+        [
+          "آزاده",
+          "فرد آزاده"
+        ],
+        [
+          "مسئولیت",
+          "وظیفه"
+        ]
+      ],
+      "language": "بازگویی رویدادهای زندگی و شناخت شخصیت",
+      "literacy_topic": "بازگویی رویدادهای زندگی و شناخت شخصیت",
+      "literacy_exercise": "کدام تصمیم یک شخصیت بر رویداد داستان اثر گذاشت؟",
+      "writing": "کدام تصمیم یک شخصیت بر رویداد داستان اثر گذاشت؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و بیندیش: تندگویان» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "دانش، کوشش و مسئولیت‌پذیری می‌تواند در خدمت مردم باشد.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "دانش، کوشش و مسئولیت‌پذیری می‌تواند در خدمت مردم باشد.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 11,
+      "title": "بخوان و حفظ کن: باران",
+      "page": 72,
+      "ch": 4,
+      "focus": "تصویرسازی و لحن در شعر",
+      "prompt": "یک توصیف شاعرانه از باران بساز.",
+      "kind": "بخش مکمل",
+      "key": "e11",
+      "summary": "شعر «باران» فرصتی برای دیدن تصویرهای طبیعت و تمرین خواندن آهنگین است.",
+      "message": "با مشاهدهٔ دقیق طبیعت می‌توان احساس و اندیشه را زیبا بیان کرد.",
+      "words": [
+        [
+          "بارش",
+          "ریزش باران"
+        ],
+        [
+          "طراوت",
+          "تازگی"
+        ],
+        [
+          "تصویر",
+          "نمای ذهنی"
+        ]
+      ],
+      "language": "پیداکردن تصویرهای شاعرانه و روخوانی با آهنگ",
+      "literacy_topic": "پیداکردن تصویرهای شاعرانه و روخوانی با آهنگ",
+      "literacy_exercise": "یک توصیف شاعرانه از باران بساز.",
+      "writing": "یک توصیف شاعرانه از باران بساز.",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و حفظ کن: باران» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "با مشاهدهٔ دقیق طبیعت می‌توان احساس و اندیشه را زیبا بیان کرد.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "با مشاهدهٔ دقیق طبیعت می‌توان احساس و اندیشه را زیبا بیان کرد.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 12,
+      "title": "حکایت: درخت علم",
+      "page": 77,
+      "ch": 4,
+      "focus": "اهمیت پرورش و کاربرد دانش",
+      "prompt": "چطور می‌توان دانش را به دیگران منتقل کرد؟",
+      "kind": "بخش مکمل",
+      "key": "e12",
+      "summary": "حکایت «درخت علم» از رشد دانایی و ارزش یادگیری سخن می‌گوید.",
+      "message": "دانش با تلاش و مراقبت به بار می‌نشیند.",
+      "words": [
+        [
+          "دانش",
+          "آگاهی"
+        ],
+        [
+          "ثمر",
+          "میوه و نتیجه"
+        ],
+        [
+          "پرورش",
+          "رشد دادن"
+        ]
+      ],
+      "language": "برداشت مفهوم نمادین «درخت»",
+      "literacy_topic": "برداشت مفهوم نمادین «درخت»",
+      "literacy_exercise": "چطور می‌توان دانش را به دیگران منتقل کرد؟",
+      "writing": "چطور می‌توان دانش را به دیگران منتقل کرد؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «حکایت: درخت علم» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "دانش با تلاش و مراقبت به بار می‌نشیند.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "دانش با تلاش و مراقبت به بار می‌نشیند.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 13,
+      "title": "بخوان و بیندیش: بوعلی و بهمنیار",
+      "page": 80,
+      "ch": 4,
+      "focus": "استدلال، رفتار و مقایسهٔ ادعا و عمل",
+      "prompt": "رفتار افراد چگونه می‌تواند باورشان را نشان دهد؟",
+      "kind": "بخش مکمل",
+      "key": "e13",
+      "summary": "در این داستان، بوعلی سینا با مثالی عملی به پرسش شاگردش بهمنیار پاسخ می‌دهد.",
+      "message": "گفتار اثرگذار و نفوذ اندیشه با ادعا به دست نمی‌آید.",
+      "words": [
+        [
+          "شاگرد",
+          "آموزنده"
+        ],
+        [
+          "استاد",
+          "آموزگار"
+        ],
+        [
+          "استدلال",
+          "دلیل آوردن"
+        ]
+      ],
+      "language": "عناصر داستان و استدلال در گفت‌وگو",
+      "literacy_topic": "عناصر داستان و استدلال در گفت‌وگو",
+      "literacy_exercise": "رفتار افراد چگونه می‌تواند باورشان را نشان دهد؟",
+      "writing": "رفتار افراد چگونه می‌تواند باورشان را نشان دهد؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و بیندیش: بوعلی و بهمنیار» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "گفتار اثرگذار و نفوذ اندیشه با ادعا به دست نمی‌آید.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "گفتار اثرگذار و نفوذ اندیشه با ادعا به دست نمی‌آید.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 14,
+      "title": "بخوان و حفظ کن: شیر خدا",
+      "page": 88,
+      "ch": 5,
+      "focus": "آشنایی با بیان ستایش‌آمیز و لحن شعر",
+      "prompt": "چه ویژگی‌هایی یک شخصیت را شایستهٔ ستایش می‌کند؟",
+      "kind": "بخش مکمل",
+      "key": "e14",
+      "summary": "شعر «شیر خدا» برای ستایش شجاعت و صفات نیک یک شخصیت دینی است.",
+      "message": "شجاعت همراه با عدالت و اخلاق ارزشمند است.",
+      "words": [
+        [
+          "شجاعت",
+          "دلیری"
+        ],
+        [
+          "عدالت",
+          "دادگری"
+        ],
+        [
+          "ستایش",
+          "بزرگداشت"
+        ]
+      ],
+      "language": "خوانش حماسی و شرح تعبیرهای ستایش‌آمیز",
+      "literacy_topic": "خوانش حماسی و شرح تعبیرهای ستایش‌آمیز",
+      "literacy_exercise": "چه ویژگی‌هایی یک شخصیت را شایستهٔ ستایش می‌کند؟",
+      "writing": "چه ویژگی‌هایی یک شخصیت را شایستهٔ ستایش می‌کند؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و حفظ کن: شیر خدا» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "شجاعت همراه با عدالت و اخلاق ارزشمند است.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "شجاعت همراه با عدالت و اخلاق ارزشمند است.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 15,
+      "title": "حکایت: عمر گرانمایه",
+      "page": 92,
+      "ch": 5,
+      "focus": "ارزش کار و استقلال؛ حکایت سعدی",
+      "prompt": "برای استفادهٔ بهتر از زمان چه تصمیمی می‌توانی بگیری؟",
+      "kind": "بخش مکمل",
+      "key": "e15",
+      "summary": "در حکایت سعدی، دو برادر با دو شیوهٔ زندگی روبه‌رو هستند: یکی در خدمت فرمانرواست و دیگری با کار خود روزی به دست می‌آورد. گفت‌وگوی آن‌ها ارزش عزت نفس و استقلال را روشن می‌کند.",
+      "message": "آزادگی و کسب روزی با کوشش خود، بر وابستگی همراه با خواری برتری دارد.",
+      "words": [
+        [
+          "گرانمایه",
+          "ارزشمند"
+        ],
+        [
+          "مشقّت",
+          "سختی و رنج"
+        ],
+        [
+          "مذلّت",
+          "خواری"
+        ],
+        [
+          "توانگر",
+          "ثروتمند"
+        ]
+      ],
+      "language": "شناخت عبارت‌های کهن سعدی، مقایسهٔ دیدگاه دو برادر و پیام استقلال و آزادگی.",
+      "literacy_topic": "کاربرد پیام حکایت در برنامه‌ریزی روزانه",
+      "literacy_exercise": "برای استفادهٔ بهتر از زمان چه تصمیمی می‌توانی بگیری؟",
+      "writing": "برای استفادهٔ بهتر از زمان چه تصمیمی می‌توانی بگیری؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «حکایت: عمر گرانمایه» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "وقت ارزشمند است و بهتر است آن را آگاهانه صرف کنیم.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "وقت ارزشمند است و بهتر است آن را آگاهانه صرف کنیم.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 16,
+      "title": "بخوان و بیندیش: پیاده و سوار",
+      "page": 95,
+      "ch": 5,
+      "focus": "سنجیدن رفتار و درست‌فهمیدن نیت شخصیت‌ها",
+      "prompt": "چه فرقی بین کمک کردن و فقط وعدهٔ کمک دادن وجود دارد؟",
+      "kind": "بخش مکمل",
+      "key": "e16",
+      "summary": "داستان یک پیاده و یک سوار، برداشت‌های آنان از کمک کردن و اعتماد را به پرسش می‌کشد.",
+      "message": "در رفتار با دیگران نیت خوب، مسئولیت و داوری منصفانه مهم است.",
+      "words": [
+        [
+          "پیاده",
+          "کسی که راه می‌رود"
+        ],
+        [
+          "سوار",
+          "کسی که بر مرکب است"
+        ],
+        [
+          "بزّاز",
+          "پارچه‌فروش"
+        ]
+      ],
+      "language": "تحلیل رفتار دو شخصیت و مقایسهٔ نیت و عمل",
+      "literacy_topic": "تحلیل رفتار دو شخصیت و مقایسهٔ نیت و عمل",
+      "literacy_exercise": "چه فرقی بین کمک کردن و فقط وعدهٔ کمک دادن وجود دارد؟",
+      "writing": "چه فرقی بین کمک کردن و فقط وعدهٔ کمک دادن وجود دارد؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و بیندیش: پیاده و سوار» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "در رفتار با دیگران نیت خوب، مسئولیت و داوری منصفانه مهم است.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "در رفتار با دیگران نیت خوب، مسئولیت و داوری منصفانه مهم است.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 17,
+      "title": "حکایت: افلاطون و مرد جاهل",
+      "page": 100,
+      "ch": 6,
+      "focus": "گفتار آگاهانه و اثر همنشینی",
+      "prompt": "چرا بهتر است تعریف و انتقاد را با تفکر بشنویم؟",
+      "kind": "بخش مکمل",
+      "key": "e17",
+      "summary": "در این حکایت، مردی ستایش یک فرد نادان را برای افلاطون نقل می‌کند؛ افلاطون از این تعریف شاد نمی‌شود و دربارهٔ ارزش داوریِ ستایشگر می‌اندیشد.",
+      "message": "برای ارزیابی تعریف و انتقاد، باید به آگاهی و داوری گوینده نیز توجه کرد.",
+      "words": [
+        [
+          "جاهل",
+          "نادان"
+        ],
+        [
+          "خردمند",
+          "دانا"
+        ],
+        [
+          "بردباری",
+          "شکیبایی"
+        ]
+      ],
+      "language": "نتیجه‌گیری از گفت‌وگو و تفاوت ارزش تعریفِ آگاهانه با ستایشِ ناآگاهانه.",
+      "literacy_topic": "بررسی تقابل دانایی و نادانی",
+      "literacy_exercise": "چرا بهتر است تعریف و انتقاد را با تفکر بشنویم؟",
+      "writing": "چرا بهتر است تعریف و انتقاد را با تفکر بشنویم؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «حکایت: افلاطون و مرد جاهل» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "در مواجهه با نادانی، خردورزی و آرامش ارزش دارد.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "در مواجهه با نادانی، خردورزی و آرامش ارزش دارد.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 18,
+      "title": "بخوان و حفظ کن: به گیتی، به از راستی، پیشه نیست",
+      "page": 104,
+      "ch": 6,
+      "focus": "راستی و خوانش آهنگین شعر",
+      "prompt": "یک نمونهٔ روزمره از درستکاری بیان کن.",
+      "kind": "بخش مکمل",
+      "key": "e18",
+      "summary": "شعری دربارهٔ راستگویی و برتری درستی بر رفتار فریبکارانه است.",
+      "message": "راستی از پایه‌های کردار نیک است.",
+      "words": [
+        [
+          "راستی",
+          "درستی"
+        ],
+        [
+          "کژی",
+          "نادرستی"
+        ],
+        [
+          "پیشه",
+          "کار و روش"
+        ]
+      ],
+      "language": "خواندن صحیح و پیدا کردن واژه‌های متضاد",
+      "literacy_topic": "خواندن صحیح و پیدا کردن واژه‌های متضاد",
+      "literacy_exercise": "یک نمونهٔ روزمره از درستکاری بیان کن.",
+      "writing": "یک نمونهٔ روزمره از درستکاری بیان کن.",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و حفظ کن: به گیتی، به از راستی، پیشه نیست» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "راستی از پایه‌های کردار نیک است.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "راستی از پایه‌های کردار نیک است.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 19,
+      "title": "بخوان و بیندیش: آوای گنجشکان",
+      "page": 109,
+      "ch": 6,
+      "focus": "گوش دادن دقیق، گفت‌وگو و دانایی",
+      "prompt": "چرا پرسیدن سؤال نشانهٔ یادگیری است؟",
+      "kind": "بخش مکمل",
+      "key": "e19",
+      "summary": "داستان «آوای گنجشکان» با گفت‌وگوی شیخ مکتب و شخصی به نام ممنون، ارزش گوش‌دادن و پذیرش یادگیری را نشان می‌دهد.",
+      "message": "برای آموختن چیز تازه، باید با فروتنی گوش کنیم و خود را دانای همه‌چیز ندانیم.",
+      "words": [
+        [
+          "آوا",
+          "صدا"
+        ],
+        [
+          "مکتب",
+          "محل آموزش قدیم"
+        ],
+        [
+          "فروتنی",
+          "تواضع"
+        ]
+      ],
+      "language": "برداشت از نماد کوزه و گوش‌دادن فعال",
+      "literacy_topic": "برداشت از نماد کوزه و گوش‌دادن فعال",
+      "literacy_exercise": "چرا پرسیدن سؤال نشانهٔ یادگیری است؟",
+      "writing": "چرا پرسیدن سؤال نشانهٔ یادگیری است؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «بخوان و بیندیش: آوای گنجشکان» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "برای آموختن چیز تازه، باید با فروتنی گوش کنیم و خود را دانای همه‌چیز ندانیم.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "برای آموختن چیز تازه، باید با فروتنی گوش کنیم و خود را دانای همه‌چیز ندانیم.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 20,
+      "title": "نیایش: خدایا، جهان پادشاهی تو راست",
+      "page": 114,
+      "ch": 6,
+      "focus": "خوانش با لحن آرام و توجه به نیایش",
+      "prompt": "تفاوت خوانش نیایش و یک داستان هیجانی چیست؟",
+      "kind": "بخش مکمل",
+      "key": "e20",
+      "summary": "نیایش پایانی کتاب فرصتی برای توجه به سپاسگزاری و خواندن متن دعایی با لحن مناسب است.",
+      "message": "سپاسگزاری و تأمل بخشی از بیان ادبی و معنوی‌اند.",
+      "words": [
+        [
+          "نیایش",
+          "دعا و راز و نیاز"
+        ],
+        [
+          "جهان",
+          "گیتی"
+        ],
+        [
+          "سپاس",
+          "شکرگزاری"
+        ]
+      ],
+      "language": "لحن نیایشی و معنی واژه‌ها",
+      "literacy_topic": "لحن نیایشی و معنی واژه‌ها",
+      "literacy_exercise": "تفاوت خوانش نیایش و یک داستان هیجانی چیست؟",
+      "writing": "تفاوت خوانش نیایش و یک داستان هیجانی چیست؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «نیایش: خدایا، جهان پادشاهی تو راست» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "سپاسگزاری و تأمل بخشی از بیان ادبی و معنوی‌اند.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "سپاسگزاری و تأمل بخشی از بیان ادبی و معنوی‌اند.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    },
+    {
+      "id": 21,
+      "title": "واژه‌نامه",
+      "page": 115,
+      "ch": 6,
+      "focus": "جست‌وجوی معنای واژه‌ها و کاربردشان در جمله",
+      "prompt": "برای فهم معنی یک واژهٔ تازه چه راه‌هایی سراغ داری؟",
+      "kind": "بخش مکمل",
+      "key": "e21",
+      "summary": "واژه‌نامهٔ پایان کتاب برای مراجعه و آشنایی با معنای واژه‌های دشوار درس‌هاست.",
+      "message": "یادگیری واژه با یافتن معنی و به‌کار بردن آن در جمله پایدارتر می‌شود.",
+      "words": [
+        [
+          "واژه‌نامه",
+          "فهرست معنی کلمات"
+        ],
+        [
+          "معنی",
+          "مفهوم"
+        ],
+        [
+          "کاربرد",
+          "استفاده"
+        ]
+      ],
+      "language": "جست‌وجو، معنی‌یابی و جمله‌سازی",
+      "literacy_topic": "جست‌وجو، معنی‌یابی و جمله‌سازی",
+      "literacy_exercise": "برای فهم معنی یک واژهٔ تازه چه راه‌هایی سراغ داری؟",
+      "writing": "برای فهم معنی یک واژهٔ تازه چه راه‌هایی سراغ داری؟",
+      "oral": "با صدای بلند دربارهٔ برداشت خود از این بخش ۳۰ ثانیه صحبت کن.",
+      "reading": "اگر متن اصلی این بخش را در کتاب داری، آن را با لحن مناسب بخوان؛ از برکردن شعر اختیاری است.",
+      "study_guide": [
+        "۱. بخوان و نکتهٔ اصلی را بگو.",
+        "۲. واژگان کلیدی را بازی کن.",
+        "۳. پیام این بخش را به یک موقعیت واقعی پیوند بده."
+      ],
+      "questions": [
+        {
+          "q": "پیام اصلی «واژه‌نامه» به کدام گزینه نزدیک‌تر است؟",
+          "choices": [
+            "یادگیری واژه با یافتن معنی و به‌کار بردن آن در جمله پایدارتر می‌شود.",
+            "نادیده گرفتن پرسش‌ها همیشه درست است.",
+            "برای یادگیری هیچ تمرینی لازم نیست.",
+            "به نظر دیگران نباید گوش کرد."
+          ],
+          "answer": 0,
+          "explanation": "یادگیری واژه با یافتن معنی و به‌کار بردن آن در جمله پایدارتر می‌شود.",
+          "skill": "پیام و درک مطلب",
+          "level": 1
+        }
+      ],
+      "game_types": [
+        "جورچین معنی",
+        "درست یا نادرست",
+        "چالش املا",
+        "چهارگزینه‌ای"
+      ]
+    }
+  ],
+  "about": {
+    "title": "فارسی ششم دبستان (۶۰۳)",
+    "source": "فهرست و ساختار کتاب ارسالی، چاپ پنجم ۱۳۹۹",
+    "notice": "این برنامه متن کتاب را بازنشر نمی‌کند؛ توضیح‌ها و پرسش‌ها برای تمرین آموزشی به زبان تازه نوشته شده‌اند. برای متن و تمرین‌های اصلی به صفحهٔ کتاب مراجعه کنید.",
+    "edition": "چاپ پنجم ۱۳۹۹؛ استخراج سرفصل از صفحات فهرست، سایر توضیح‌ها بازنویسی آموزشی مستقل",
+    "copyright": "متن کامل شعرها و درس‌های دارای حق نشر در برنامه تکثیر نشده است؛ آموزش مفهومی، خلاصه، پیام و تمرین‌های تولیدشده ارائه می‌شوند.",
+    "count": 38
   }
-  if (/پیام|مفهوم/.test(q)) {
-    say(`💡 ${x.message}`);
-  } else if (/معنی|واژه|لغت/.test(q)) {
-    say('🔤 ' + x.words.map(p =>
-      `${p[0]}: ${p[1]}`
-    ).join('\n'));
-  } else if (/زبان|ادبی|دستور|نکته/.test(q)) {
-    say(`✍️ ${x.language}
-تمرین: ${x.literacy_exercise}`);
-  } else if (/نگارش|تکلیف|تمرین/.test(q)) {
-    say(`📝 ${x.writing}`);
-  } else {
-    say(`📖 ${x.summary}
-
-پیام: ${x.message}
-صفحه کتاب: ${x.page}`);
-  }
-}
-
-function startGame() {
-  const x = selected;
-  const Q = x.questions?.length ? x.questions[0] : null;
-  if (!Q) return say('برای این بخش آزمونی ثبت نشده است.');
-
-  say(`🎮 سؤال: ${Q.q}`);
-  const bar = document.createElement('div');
-  bar.className = 'nc-opts';
-
-  Q.choices.forEach((v,i) => {
-    const b = document.createElement('button');
-    b.textContent = v;
-    b.onclick = () => {
-      say(v,true);
-      say((i === Q.answer ? '✅ درست! ' : '🌱 پاسخ را مرور کن. ') + Q.explanation);
-      correct += Number(i === Q.answer);
-      total++;
-      bar.remove();
-      opts([
-        ['بازی دوباره',startGame],
-        ['معنی واژه‌ها',()=>send('واژگان')]
-      ]);
-    };
-    bar.appendChild(b);
-  });
-  log.appendChild(bar);
-  log.scrollTop = log.scrollHeight;
-}
-
-$('#nc-form').onsubmit = ev => {
-  ev.preventDefault();
-  send($('#nc-input').value);
-};
-
-$('#nc-report').onclick = () =>
-  say(`📈 کارنامه این نشست: ${correct} پاسخ درست از ${total} سؤال.`);
-
-$('#nc-teacher').onclick = () =>
-  say('پنل معلم واقعی و هوش مصنوعی مولد، به سرور Node.js نیاز دارند و روی GitHub Pages اجرا نمی‌شوند.');
-
-opts([
-  ['📖 خلاصه',()=>send('خلاصه')],
-  ['💡 پیام',()=>send('پیام')],
-  ['🔤 واژگان',()=>send('واژگان')],
-  ['🎮 بازی',startGame]
-]);
-
-choose();
-})();
+}</script>
+<script>/* همیار فارسی ششم — chat-first educational interface; no third-party dependencies */
+(()=>{'use strict';
+const BOOK=JSON.parse(document.getElementById('book-data').textContent);
+const ITEMS=[...BOOK.lessons,...BOOK.extras].sort((a,b)=>a.page-b.page), MAP=new Map(ITEMS.map(x=>[x.key,x]));
+const $=s=>document.querySelector(s),e=(s)=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const norm=s=>String(s||'').toLowerCase().replace(/ي/g,'ی').replace(/ك/g,'ک').replace(/[\u064B-\u065F]/g,'').replace(/\u200c/g,' ').replace(/[؟?!.،:؛]/g,' ').replace(/\s+/g,' ').trim();
+const randint=n=>Math.floor(Math.random()*n);const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+const storeKey='farsi6-chatfirst-v3';let saved={};try{saved=JSON.parse(localStorage.getItem(storeKey)||'{}')}catch{}
+const state={selected:MAP.has(saved.selected)?saved.selected:'l1',name:saved.name||'',level:saved.level||'متوسط',results:saved.results||[],api:false,ai:false,user:null,game:null,sidebarFilter:'',busy:false};
+function persist(){try{localStorage.setItem(storeKey,JSON.stringify({selected:state.selected,name:state.name,level:state.level,results:state.results.slice(-300)}))}catch{}}
+function item(){return MAP.get(state.selected)||ITEMS[0]}
+function average(key){const rows=state.results.filter(x=>x.key===key);let correct=0,total=0;rows.forEach(x=>{correct+=x.correct;total+=x.total});return total?Math.round(100*correct/total):null}
+function msg(who,text){const list=$('#messages'),line=document.createElement('div');line.className='message '+(who==='user'?'user':'bot');const av=document.createElement('div');av.className='avatar';av.textContent=who==='user'?'👤':'🤖';const card=document.createElement('div');card.className='bubble';card.textContent=text;line.append(av,card);list.appendChild(line);if(who==='bot'){const cap=document.createElement('div');cap.className='assistant-note';cap.textContent=state.ai&&state.user?.role==='student'?'پاسخ آموزشی؛ ممکن است نیازمند بررسی با کتاب باشد':'راهنمای آموزشی مبتنی بر محتوای آمادهٔ کتاب';list.appendChild(cap)}scroll();return line}
+function scroll(){const x=$('#messages');requestAnimationFrame(()=>x.scrollTop=x.scrollHeight)}
+function actions(values){const el=document.createElement('div');el.className='action-bar';for(const a of values){const b=document.createElement('button');b.className='chip';b.textContent=a.label;b.addEventListener('click',()=>{if(a.fn)a.fn();else{send(a.prompt||a.label)}});el.appendChild(b)}$('#messages').appendChild(el);scroll();return el}
+function h(s){return e(s).replace(/\n/g,'<br>')}
+function renderSide(){let q=norm(state.sidebarFilter),out='';for(const ch of BOOK.chapters){const arr=ITEMS.filter(x=>x.ch===ch.id&&(!q||norm(x.title+' '+x.focus).includes(q)));if(!arr.length)continue;out+=`<div class="sidegroup"><h3>${e(ch.name)} <span>${arr.length} بخش</span></h3>${arr.map(i=>`<button class="section-item ${i.key===state.selected?'active':''}" data-key="${i.key}"><span>${e(i.title)}</span><small>ص ${i.page}</small></button>`).join('')}</div>`}$('#item-list').innerHTML=out||'<p>بخشی پیدا نشد.</p>';document.querySelectorAll('.section-item').forEach(el=>el.onclick=()=>choose(el.dataset.key))}
+function choose(key){if(!MAP.has(key))return;state.selected=key;state.game=null;persist();renderSide();const i=item();$('#current-title').textContent=i.title;$('#current-subtitle').textContent=`${BOOK.chapters.find(c=>c.id===i.ch).name} • صفحه ${i.page} کتاب • ${i.kind}`;$('#messages').innerHTML='';msg('bot',`به بخش «${i.title}» خوش آمدی! 🌷\n\nمی‌توانیم این بخش را مرحله‌به‌مرحله یاد بگیریم. من برایت خلاصه، پیام، معنی واژه‌ها، نکتهٔ زبانی، تمرین و بازی دارم. سؤال خودت را هم بپرس.`);actions([{label:'📖 خلاصه',prompt:'خلاصه این بخش'},{label:'💡 پیام',prompt:'پیام این بخش'},{label:'🧩 واژگان',prompt:'معنی واژه ها'},{label:'🎮 بازی',prompt:'بازی'},{label:'📝 آزمون',prompt:'آزمون'}]);$('#sidebar').classList.remove('open');$('#overlay').classList.remove('open');}
+function getOffline(q,i){const s=norm(q),pairs=i.words||[];for(const [w,def] of pairs)if(s.includes(norm(w))&&/(معنی|یعنی|مفهوم|واژه)/.test(s))return `«${w}» یعنی ${def}.\n\nحالا یک جمله با این واژه بساز تا بهتر در ذهنت بماند.`;
+if(/(معنی|واژه|لغت|هم خانواده|متضاد)/.test(s))return `واژه‌های کلیدی «${i.title}»:\n${pairs.map(([w,d])=>'• '+w+': '+d).join('\n')}\n\nدوست داری یک بازی جورچین معنی انجام بدهیم؟`;
+if(/(پیام|نتیجه|پند|مفهوم شعر|مفهوم درس)/.test(s))return `💡 پیام «${i.title}»: ${i.message}\n\nبه نظرت این پیام در چه موقعیت واقعی کاربرد دارد؟`;
+if(/(خلاصه|داستان|درباره|آموزش|چیست|موضوع|شعر)/.test(s))return `📖 خلاصهٔ «${i.title}»:\n${i.summary}\n\nپیام اصلی: ${i.message}\n\nبرای دیدن متن کامل، کتاب را در صفحهٔ ${i.page} باز کن.`;
+if(/(زبانی|دستوری|ادبی|تشبیه|کنایه|جمله|قافیه|نکته)/.test(s))return `✍️ نکتهٔ زبانی و ادبی:\n${i.language}\n\nتمرین: ${i.literacy_exercise}`;
+if(/(نگارش|نوشتن|تکلیف|کاربرگ)/.test(s))return `📝 تمرین نگارش ویژهٔ این بخش:\n${i.writing}\n\nبرای شروع، یک جمله بنویس و سپس آن را کامل‌تر کن.`;
+if(/(روخوانی|خواندن|لحن|حفظ)/.test(s))return `📚 پیشنهاد روخوانی:\n${i.reading}\n\nبعد از خواندن، پیام بخش را با زبان خودت بیان کن.`;
+const match=ITEMS.find(z=>norm(z.title).length>3&&s.includes(norm(z.title)));if(match&&match.key!==i.key){setTimeout(()=>choose(match.key),100);return `بخش «${match.title}» را پیدا کردم و باز می‌کنم.`}
+return `پرسش خوبی است. 🌱 در «${i.title}» روی این مفهوم کار می‌کنیم: ${i.focus||i.literacy_topic}.\n\n${i.summary}\n\nاگر سؤال دقیق‌تر درباره یک شخصیت، واژه یا بیت داری، بنویس. این حالت آفلاین محدود است؛ گفت‌وگوی مولد به اتصال هوش مصنوعی روی سرور نیاز دارد.`}
+const gameWords=()=>item().words||[];
+function startGame(type){const i=item();if(!i)return;let rows=[];
+if(type==='quiz'){rows=shuffle(i.questions||[]).map(q=>({title:q.q,choices:q.choices,answer:q.answer,explanation:q.explanation}));}
+else if(type==='match'){const words=shuffle(gameWords()).slice(0,4);rows=words.map(([w,d])=>{const others=shuffle(gameWords().filter(p=>p[0]!==w).map(p=>p[1])).slice(0,3);const choices=shuffle([d,...others]);return {title:`«${w}» چه معنایی دارد؟`,choices,answer:choices.indexOf(d),explanation:`${w}: ${d}`}})}
+else if(type==='spell'){rows=shuffle(gameWords()).slice(0,4).map(([w,d])=>{const bad1=spellVariant(w,1),bad2=spellVariant(w,2),choices=shuffle([...new Set([w,bad1,bad2])]);return {title:`کدام نوشتار برای واژه به معنای «${d}» درست است؟`,choices,answer:choices.indexOf(w),explanation:`شکل درست «${w}» است.`}})}
+else if(type==='truefalse'){const pairs=shuffle(gameWords()).slice(0,4);rows=pairs.map(([w,d],idx)=>{const truth=idx%2===0;const bad=gameWords().find(x=>x[0]!==w)?.[1]||'نام یک جانور';return {title:`«${w}» یعنی «${truth?d:bad}».`,choices:['درست ✅','نادرست ❌'],answer:truth?0:1,explanation:`معنی درست «${w}» عبارت است از «${d}».`}})}
+if(!rows.length)return msg('bot','برای این بازی هنوز سؤال کافی نداریم. بازی آزمون را انتخاب کن.');state.game={type,rows,index:0,correct:0,total:rows.length,locked:false};msg('bot',`🎮 ${{'quiz':'آزمون چهارگزینه‌ای','match':'جورچین معنی','spell':'چالش املا','truefalse':'درست یا نادرست'}[type]} شروع شد!\nبرای «${i.title}» ${rows.length} پرسش داریم. بعد از هر پاسخ راهنمایی می‌گیری.`);nextGame()}
+function spellVariant(word,mode){let a=[...word];if(mode===1){const alt={'س':'ص','ز':'ذ','ت':'ط','ق':'غ','ه':'ح','ا':'ع','ک':'گ','ب':'پ','د':'ذ','ش':'س','ف':'ق','م':'ن','ر':'ز','خ':'ح','ن':'م'};let index=a.findIndex(c=>alt[c]);if(index<0)index=0;a[index]=alt[a[index]]||'ا'}else{const index=Math.max(0,Math.floor(a.length/2));if(a.length>2)a.splice(index,1);else a.push('ا')}const changed=a.join('');return changed===word?word+'ا':changed}
+function nextGame(){const g=state.game;if(!g)return;if(g.index>=g.total){const score=Math.round(100*g.correct/g.total);msg('bot',`🏁 بازی تمام شد!\nنتیجه: ${g.correct} پاسخ درست از ${g.total} (${score}٪).\n${score>=80?'آفرین! آماده‌ای سراغ سؤال‌های دشوارتر بروی. 🌟':score>=50?'در حال پیشرفت هستی؛ یک مرور کوتاه واژگان مفید است.':'برای بهتر شدن، خلاصه و معنی واژه‌ها را مرور کن و دوباره بازی کن.'}`);saveResult(item().key,g.type,g.correct,g.total);state.game=null;actions([{label:'🎮 یک بازی دیگر',prompt:'بازی'},{label:'🔎 مرور معنی واژه‌ها',prompt:'معنی واژه ها'},{label:'📈 کارنامه',fn:openProgress}]);return}
+const r=g.rows[g.index];msg('bot',`سؤال ${g.index+1} از ${g.total}:\n${r.title}`);const bar=actions(r.choices.map((x,idx)=>({label:`${idx+1}) ${x}`,fn:()=>checkAnswer(idx,bar)})));}
+function checkAnswer(choice,bar){const g=state.game;if(!g||g.locked)return;g.locked=true;const row=g.rows[g.index],right=choice===row.answer;if(right)g.correct++;bar.querySelectorAll('button').forEach((b,idx)=>{b.disabled=true;if(idx===row.answer)b.classList.add('correct');else if(idx===choice)b.classList.add('wrong')});msg('user',row.choices[choice]);msg('bot',(right?'✅ درست گفتی!':'🌱 این بار پاسخ درست نبود.')+'\n'+row.explanation);g.index++;g.locked=false;actions([{label:g.index>=g.total?'مشاهده کارنامه 🏁':'سؤال بعدی ←',fn:nextGame}])}
+function showGames(){msg('bot',`برای «${item().title}» کدام بازی را دوست داری؟`);actions([{label:'🧩 جورچین معنی',fn:()=>startGame('match')},{label:'✍️ چالش املا',fn:()=>startGame('spell')},{label:'✅ درست یا نادرست',fn:()=>startGame('truefalse')},{label:'📝 آزمون',fn:()=>startGame('quiz')}])}
+async function saveResult(key,type,correct,total){state.results.push({key,type,correct,total,time:Date.now()});persist();if(state.api&&state.user?.role==='student'){try{const res=await request('/api/result','POST',{key,type,correct,total});if(res.progress)state.serverProgress=res.progress}catch{msg('bot','نتیجه در این دستگاه ذخیره شد، اما ثبت آن در پنل معلم ممکن نبود.')}}}
+async function request(url,method='GET',payload){const res=await fetch(url,{method,credentials:'same-origin',headers:{'Content-Type':'application/json'},body:payload?JSON.stringify(payload):undefined});const val=await res.json();if(!res.ok)throw new Error(val.error||'ارتباط با سرور ناموفق بود.');return val}
+function findSection(q){const s=norm(q);const numbers={'اول':1,'دوم':2,'سوم':3,'چهارم':4,'پنجم':5,'ششم':6,'هفتم':7,'هشتم':8,'نهم':9,'دهم':10,'یازدهم':11,'دوازدهم':12,'سیزدهم':13,'چهاردهم':14,'پانزدهم':15,'شانزدهم':16,'هفدهم':17};let match=s.match(/درس\s*([۰-۹0-9]+)/);if(match){const number=Number(match[1].replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)));return BOOK.lessons.find(x=>x.id===number)}for(const [word,n]of Object.entries(numbers))if(s.includes('درس '+word))return BOOK.lessons.find(x=>x.id===n);const values=ITEMS.filter(x=>x.title&&norm(x.title).length>3&&s.includes(norm(x.title)));return values.sort((a,b)=>b.title.length-a.title.length)[0]}
+async function send(raw){const q=String(raw||'').trim();if(!q||state.busy)return;$('#input').value='';msg('user',q);let i=item();const chosen=findSection(q);if(chosen&&chosen.key!==i.key){choose(chosen.key);i=item()}
+const normalized=norm(q);
+if(/(بازی|سرگرمی|بازی تعاملی)/.test(normalized)){showGames();return}
+if(/(آزمون|تست|چهارگزینه|کوئیز)/.test(normalized)){startGame('quiz');return}
+if(/(کارنامه|پیشرفت|نمره)/.test(normalized)){openProgress();return}
+if(/(فهرست درس|همه درس|سرفصل)/.test(normalized)){msg('bot',`کتاب شش فصل و ${BOOK.lessons.length} درس اصلی و ${BOOK.extras.length} بخش مکمل دارد. برای انتخاب، از دکمه «درس‌ها» استفاده کن.`);return}
+if(/(بخوان و بیندیش)/.test(normalized)&&!chosen){const list=BOOK.extras.filter(x=>x.title.includes('بخوان و بیندیش'));msg('bot','بخش‌های بخوان و بیندیش کتاب:');actions(list.map(x=>({label:x.title,fn:()=>choose(x.key)})));return}
+if(/(شعرها|شعر های کتاب)/.test(normalized)&&!chosen){const list=BOOK.extras.filter(x=>x.title.includes('بخوان و حفظ کن'));msg('bot','بخش‌های شعر و حفظ‌کردنی کتاب:');actions(list.map(x=>({label:x.title,fn:()=>choose(x.key)})));return}
+if(state.api&&state.user?.role==='student'){state.busy=true;$('#send-btn').disabled=true;try{const r=await request('/api/chat','POST',{key:i.key,question:q,level:state.level});msg('bot',r.answer);if(r.mode==='guided'&&state.ai)msg('bot','این پاسخ از راهنمای آماده ارائه شده است؛ اتصال مولد در این نوبت فعال نبود.')}catch(err){msg('bot',getOffline(q,i)+'\n\n(ارتباط با سرور برقرار نشد.)')}finally{state.busy=false;$('#send-btn').disabled=false}return}
+msg('bot',getOffline(q,i));if(normalized.includes('معنی'))actions([{label:'🧩 بازی معنی',fn:()=>startGame('match')}]);}
+function openModal(title,html){$('#dialog-title').textContent=title;$('#dialog-body').innerHTML=html;$('#dialog-wrap').classList.remove('hidden')}
+function closeModal(){$('#dialog-wrap').classList.add('hidden')}
+function gradeProgress(list){const scored=ITEMS.map(x=>({x,p:average(x.key)})).filter(z=>z.p!==null).sort((a,b)=>a.p-b.p);return scored}
+function openProgress(){const items=gradeProgress(),num=state.results.length,correct=state.results.reduce((a,x)=>a+x.correct,0),total=state.results.reduce((a,x)=>a+x.total,0);const pct=total?Math.round(correct*100/total):0;const needs=items.filter(z=>z.p<70).slice(0,5),nice=items.filter(z=>z.p>=80).slice(-4);let html=`<p>این کارنامه، نتیجه تمرین‌های ثبت‌شده روی همین دستگاه است. ${state.user?.role==='student'?'نتایج بازی‌ها در سرور کلاس هم ثبت می‌شوند.':''}</p><div class="metrics"><div class="metric"><b>${num}</b><small>بازی انجام‌شده</small></div><div class="metric"><b>${pct}٪</b><small>پاسخ‌های درست</small></div><div class="metric"><b>${items.length}</b><small>بخش تمرین‌شده</small></div></div>`;if(!num)html+='<div class="card">هنوز تمرینی ثبت نشده است. از یک بازی کوتاه شروع کن.</div>';if(needs.length)html+=`<div class="card"><h3>🌱 پیشنهاد مرور شخصی</h3>${needs.map(z=>`<div class="result-row"><span>${e(z.x.title)}</span><b>${z.p}٪</b></div><div class="bar"><i style="width:${z.p}%"></i></div>`).join('')}</div>`;if(nice.length)html+=`<div class="card"><h3>🌟 نقطه‌های قوت</h3>${nice.map(z=>`<div class="result-row"><span>${e(z.x.title)}</span><b>${z.p}٪</b></div>`).join('')}</div>`;html+=`<div class="card"><h3>انتخاب سطح یادگیری</h3><select id="level-select" class="field"><option>آسان</option><option>متوسط</option><option>پیشرفته</option></select><p>در حالت متصل به هوش مصنوعی، پاسخ‌ها با این سطح تنظیم می‌شوند.</p></div><div class="field-row"><label>نام مستعار اختیاری روی همین گوشی</label><input id="nickname" class="field" maxlength="30" placeholder="نام مستعار" value="${e(state.name)}"></div><button id="save-profile" class="btn primary">ذخیره تنظیمات</button>`;openModal('📈 کارنامه و شخصی‌سازی',html);$('#level-select').value=state.level;$('#save-profile').onclick=()=>{state.name=$('#nickname').value.trim();state.level=$('#level-select').value;persist();closeModal();msg('bot',`تنظیمات ذخیره شد${state.name?'، '+state.name:''}! سطح انتخابی تو «${state.level}» است.`)}}
+function offlineTeacherMessage(){openModal('👩‍🏫 پنل معلم',`<div class="card"><h3>پنل معلم در نسخه آنلاین سروری</h3><p>این آدرس فعلاً نسخهٔ گفت‌وگومحور GitHub Pages است. برای ساخت کلاس واقعی، ثبت کارنامه دانش‌آموزان، تکلیف و چت با مدل هوش مصنوعی باید پروژه کامل را روی سرور Node.js با HTTPS و ذخیره‌سازی دائمی اجرا کنیم. GitHub Pages به‌تنهایی سرور را اجرا نمی‌کند.</p></div><p>در همین نسخه، دانش‌آموز می‌تواند با پیام متنی خلاصه، پیام و معنی واژه‌ها را دریافت کند و در بازی‌ها شرکت کند. پیشرفت فقط روی دستگاه خودش ذخیره می‌شود.</p>`)}
+function authModal(){if(!state.api){offlineTeacherMessage();return}if(state.user?.role==='teacher'){teacherDashboard();return}if(state.user?.role==='student'){userDashboard();return}openModal('ورود و عضویت در کلاس',`<p>در نسخه سروری می‌توانید وارد کلاس شوید. اطلاعات ورود در مرورگر ذخیره نمی‌شود.</p><div class="card"><h3>👩‍🏫 ورود معلم</h3><div class="field-row"><label>نام کاربری</label><input class="field" id="teacher-id" value="teacher"></div><div class="field-row"><label>رمز خصوصی معلم</label><input class="field" type="password" id="teacher-password"></div><button class="btn primary" id="teacher-login">ورود معلم</button></div><div class="card"><h3>🎒 ورود دانش‌آموز</h3><input class="field" id="student-id" placeholder="نام مستعار"><input class="field" type="password" id="student-password" placeholder="رمز شخصی" style="margin-top:8px"><input class="field" id="student-code" placeholder="کد کلاس" style="margin-top:8px"><button class="btn primary" id="student-login">ورود دانش‌آموز</button><button class="btn" id="student-join">عضویت تازه</button></div><p id="auth-error" class="error" role="alert"></p>`);$('#teacher-login').onclick=async()=>{await signIn('/api/login',{login:$('#teacher-id').value,password:$('#teacher-password').value},'teacher')};$('#student-login').onclick=async()=>await signIn('/api/login',{login:$('#student-id').value,password:$('#student-password').value,code:$('#student-code').value},'student');$('#student-join').onclick=async()=>await signIn('/api/join',{nickname:$('#student-id').value,password:$('#student-password').value,code:$('#student-code').value},'student')}
+async function signIn(route,data,role){try{await request(route,'POST',data);const me=await request('/api/me');state.user=me.user;closeModal();updateHeader();msg('bot',`ورود ${role==='teacher'?'معلم':'دانش‌آموز'} موفق بود.`);if(role==='teacher')teacherDashboard();else userDashboard()}catch(err){$('#auth-error').textContent=err.message}}
+function updateHeader(){$('#account-btn').textContent=state.user?(state.user.role==='teacher'?'👩‍🏫 پنل معلم':'🎒 '+state.user.nickname):'👤 ورود / معلم';$('#mode-label').textContent=state.api?(state.ai?'هوش مصنوعی قابل اتصال':'نسخه سروری؛ راهنمای آموزشی'):'نسخه نمایشی؛ راهنمای آفلاین';$('#mode-label').className='tag '+(state.api&&state.ai?'good':'')}
+function userDashboard(){openModal('🎒 حساب دانش‌آموز',`<p>سلام ${e(state.user.nickname)}! با انجام بازی‌ها کارنامه‌ات به‌روزرسانی می‌شود.</p><button id="show-assign" class="btn primary">تکلیف‌های معلم</button> <button class="btn" id="show-progress">کارنامهٔ شخصی</button> <button class="btn" id="logout">خروج از حساب</button><div id="assignment-area"></div>`);$('#show-assign').onclick=async()=>{try{const r=await request('/api/assignments');$('#assignment-area').innerHTML=r.assignments.length?r.assignments.map(a=>`<div class="card">${a.keys.map(k=>e(MAP.get(k)?.title||k)).join('، ')}<p>${e(a.note)}</p></div>`).join(''):'<p>فعلاً تکلیفی ثبت نشده است.</p>'}catch(err){$('#assignment-area').textContent=err.message}};$('#show-progress').onclick=openProgress;$('#logout').onclick=logout}
+async function logout(){try{await request('/api/logout','POST',{})}catch{}state.user=null;closeModal();updateHeader();msg('bot','از حساب خارج شدی. می‌توانی از راهنمای آفلاین استفاده کنی.')}
+async function teacherDashboard(){let report;try{report=await request('/api/report')}catch(err){openModal('پنل معلم',`<p class="error">${e(err.message)}</p>`);return}const classes=report.classes||[],students=report.students||[];let html=`<p>با پنل معلم می‌توانید کلاس و تکلیف ایجاد کنید و کارنامه‌ها را ببینید. اطلاعات دانش‌آموزان را فقط در محیط امن مدرسه به اشتراک بگذارید.</p><div class="metrics"><div class="metric"><b>${classes.length}</b><small>کلاس</small></div><div class="metric"><b>${students.length}</b><small>دانش‌آموز</small></div><div class="metric"><b>${report.assignments.length}</b><small>تکلیف</small></div></div><div class="card"><h3>ساخت کلاس</h3><input class="field" id="class-name" maxlength="60" placeholder="مثلاً فارسی ششم الف"><button class="btn primary" id="create-class">ایجاد کلاس</button></div>`;
+if(classes.length){html+=`<div class="card"><h3>کلاس‌ها و کد عضویت</h3>${classes.map(c=>`<div class="result-row"><span>${e(c.name)}</span><strong>${e(c.code)}</strong></div>`).join('')}</div><div class="card"><h3>ارسال تکلیف</h3><select id="assign-class" class="field">${classes.map(c=>`<option value="${e(c.id)}">${e(c.name)}</option>`).join('')}</select><select id="assign-item" class="field" style="margin-top:8px">${ITEMS.map(i=>`<option value="${i.key}">${e(i.title)}</option>`).join('')}</select><input id="assign-note" maxlength="200" class="field" style="margin-top:8px" placeholder="توضیح کوتاه تکلیف"><button id="make-assignment" class="btn primary">ثبت تکلیف</button></div>`}
+html+=`<div class="card"><h3>کارنامه دانش‌آموزان</h3><div class="table-wrap"><table class="tbl"><thead><tr><th>نام مستعار</th><th>بازی‌ها</th><th>درصد پاسخ درست</th><th>عملیات</th></tr></thead><tbody>${students.length?students.map(s=>{const p=s.progress;const score=p.total?Math.round(p.correct/p.total*100):0;return `<tr><td>${e(s.nickname)}</td><td>${p.attempts}</td><td>${score}٪</td><td><button data-del="${e(s.id)}" class="btn">حذف داده</button></td></tr>`}).join(''):'<tr><td colspan="4">دانش‌آموزی عضو نشده است.</td></tr>'}</tbody></table></div></div><button id="export-csv" class="btn">دریافت CSV کارنامه</button> <button id="logout" class="btn">خروج از حساب</button><p id="panel-error" class="error"></p>`;openModal('👩‍🏫 پنل مدیریت معلم',html);
+$('#create-class').onclick=async()=>{try{await request('/api/classes','POST',{name:$('#class-name').value});teacherDashboard()}catch(err){$('#panel-error').textContent=err.message}};
+if(classes.length)$('#make-assignment').onclick=async()=>{try{await request('/api/assign','POST',{classId:$('#assign-class').value,keys:[$('#assign-item').value],note:$('#assign-note').value});teacherDashboard()}catch(err){$('#panel-error').textContent=err.message}};
+document.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(!confirm('آیا از حذف حساب و کارنامهٔ این دانش‌آموز مطمئن هستید؟'))return;try{await request('/api/student/delete','POST',{studentId:b.dataset.del});teacherDashboard()}catch(err){$('#panel-error').textContent=err.message}});
+$('#export-csv').onclick=()=>{const cells=[['نام مستعار','تعداد بازی','پاسخ درست','کل پرسش'],...students.map(s=>[s.nickname,s.progress.attempts,s.progress.correct,s.progress.total])];const csv='\uFEFF'+cells.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='farsi6-class-report.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};$('#logout').onclick=logout}
+async function detectServer(){try{const status=await request('/api/status');state.api=true;state.ai=!!status.aiEnabled;const me=await request('/api/me');state.user=me.user||null}catch{state.api=false;state.ai=false;state.user=null}updateHeader()}
+function init(){renderSide();$('#search').oninput=v=>{state.sidebarFilter=v.target.value;renderSide()};$('#menu-btn').onclick=()=>{$('#sidebar').classList.add('open');$('#overlay').classList.add('open')};$('#overlay').onclick=()=>{$('#sidebar').classList.remove('open');$('#overlay').classList.remove('open')};$('#account-btn').onclick=authModal;$('#progress-btn').onclick=openProgress;$('#close-dialog').onclick=closeModal;$('#dialog-wrap').addEventListener('click',ev=>{if(ev.target===$('#dialog-wrap'))closeModal()});$('#composer').onsubmit=ev=>{ev.preventDefault();send($('#input').value)};$('#input').onkeydown=ev=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();send($('#input').value)}};document.querySelectorAll('[data-prompt]').forEach(b=>b.onclick=()=>send(b.dataset.prompt));choose(state.selected);detectServer()}
+init();})();
 </script>
 </body></html>
